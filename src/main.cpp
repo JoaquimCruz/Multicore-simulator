@@ -98,7 +98,7 @@ int main() {
     IOManager ioManager;
 
     // Estruturas de Processos
-    int policyOption = 3;
+    int policyOption = 2;
     SchedulingPolicy policy = SchedulingPolicy::Priority;
     switch (policyOption){
         case 0: policy = SchedulingPolicy::FCFS; break;

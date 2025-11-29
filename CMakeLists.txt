@@ -56,15 +56,19 @@ add_executable(test_metrics
 target_link_libraries(test_metrics PRIVATE pthread)
 
 # --- COPIAR ARQUIVOS NECESSÁRIOS PARA A PASTA BUILD ---
-# Isso garante que "src/tasks/tasks.json" exista dentro de build/
-file(COPY ${CMAKE_SOURCE_DIR}/process1.json DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY ${CMAKE_SOURCE_DIR}/batch.json DESTINATION ${CMAKE_BINARY_DIR})
+# Garante que os arquivos .json e a pasta de tasks estejam junto do executável
 
-# Cria a pasta src dentro do build e copia a pasta tasks para lá
+# 1. Copia os arquivos de configuração de processos e lote
+file(COPY ${CMAKE_SOURCE_DIR}/batch.json DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/process1.json DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/process2.json DESTINATION ${CMAKE_BINARY_DIR}) # <--- Adicionado
+file(COPY ${CMAKE_SOURCE_DIR}/process3.json DESTINATION ${CMAKE_BINARY_DIR}) # <--- Adicionado
+
+# 2. Cria a estrutura da pasta 'src/tasks' dentro do build
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/src)
 file(COPY ${CMAKE_SOURCE_DIR}/src/tasks DESTINATION ${CMAKE_BINARY_DIR}/src)
 
-# Garante que a pasta output exista
+# 3. Garante que a pasta output exista para os logs
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
 # --- CUSTOM TARGETS (RUN, CHECK, AJUDA) ---
