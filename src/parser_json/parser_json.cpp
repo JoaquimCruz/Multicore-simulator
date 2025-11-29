@@ -305,6 +305,9 @@ int parseProgram(const json &programJson, MemoryManager &memManager, PCB& pcb, i
         }
     }
 
+    //passamos o número de instruções para o pcb  poder usar no SJF
+    pcb.burst_time = instruction_address_counter;
+
     int current_mem_addr = startAddr;
     int current_instruction_addr = 0;
     for (const auto &node : programJson) {

@@ -26,7 +26,7 @@ void Control_Unit::log_operation(const std::string &msg) {
     std::lock_guard<std::mutex> lock(log_mutex);
 
     // Imprime no console
-    std::cout << "[LOG] " << msg << std::endl;
+    //std::cout << "[LOG] " << msg << std::endl;
 
     // Cria nome de arquivo temporário aleatório
     static int temp_file_id = 1;  // pode ser mais sofisticado
@@ -149,10 +149,10 @@ void Control_Unit::Fetch(ControlContext &context) {
     context.registers.ir.write(instr);
 
     // === TRACE FETCH ===
-    std::cout << "[FETCH] PC=" << context.registers.pc.value
-              << " MAR=" << context.registers.mar.read()
-              << " INSTR=0x" << std::hex << instr << std::dec
-              << " (" << toBinStr(instr, 32) << ")\n";
+    //std::cout << "[FETCH] PC=" << context.registers.pc.value
+              //<< " MAR=" << context.registers.mar.read()
+              //<< " INSTR=0x" << std::hex << instr << std::dec
+              //<< " (" << toBinStr(instr, 32) << ")\n";
 
     const uint32_t END_SENTINEL = 0b11111100000000000000000000000000u;
     if (instr == END_SENTINEL) {
@@ -206,10 +206,10 @@ void Control_Unit::Decode(hw::REGISTER_BANK &registers, Instruction_Data &data) 
     }
 
     // === TRACE DECODE ===
-    std::cout << "[DECODE] RAW=0x" << std::hex << data.rawInstruction << std::dec
-              << " OP=" << (data.op.empty() ? "<UNKNOWN>" : data.op) << "\n";
-    if (!data.source_register.empty()) {
-        std::cout << "         rs(bits)=" << data.source_register
+    //std::cout << "[DECODE] RAW=0x" << std::hex << data.rawInstruction << std::dec
+             // << " OP=" << (data.op.empty() ? "<UNKNOWN>" : data.op) << "\n";
+    //if (!data.source_register.empty()) {
+        /*std::cout << "         rs(bits)=" << data.source_register
                   << " name=" << this->map.getRegisterName(binaryStringToUint(data.source_register)) << "\n";
     }
     if (!data.target_register.empty()) {
@@ -223,7 +223,7 @@ void Control_Unit::Decode(hw::REGISTER_BANK &registers, Instruction_Data &data) 
     if (!data.addressRAMResult.empty()) {
         std::cout << "         address/immediate(bits)=" << data.addressRAMResult
                   << " immediate(signed)=" << data.immediate << "\n";
-    }
+    }*/
 }
 
 
@@ -483,6 +483,7 @@ void* Core(MemoryManager &memoryManager, PCB &process, vector<unique_ptr<IOReque
     }
 
     // === DUMP FINAL DOS REGISTRADORES ===
+    /*
     {
         // nomes comuns de registradores MIPS como fallback
         const vector<string> fallback_names = {
@@ -525,7 +526,7 @@ void* Core(MemoryManager &memoryManager, PCB &process, vector<unique_ptr<IOReque
         std::cout << "IR = 0x" << std::hex << context.registers.ir.read() << std::dec
                   << " (" << toBinStr(context.registers.ir.read(), 32) << ")\n";
         std::cout << "========================================\n\n";
-    }
+    }*/
 
     return nullptr;
 }

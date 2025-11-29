@@ -13,7 +13,8 @@ enum class SchedulingPolicy {
     FCFS,       // First Come, First Served
     SJN,        // Shortest Job Next
     RR,         // Round Robin (Com Quantum e sem preempção)
-    Priority    // Prioridade
+    Priority,   // Prioridade
+    
 };
 
 class Scheduler {
@@ -41,6 +42,17 @@ public:
 
     // Define a política de escalonamento dinamicamente
     void setPolicy(SchedulingPolicy newPolicy);
+
+    //verifica se um método é preemptivo
+    bool isPreemptive() const;
+
+
+    //para políticas não preemptivas o processo continua rodando depois de um pedaço de execução
+    void pushFront(PCB* process);
+
+    
+
 };
+
 
 #endif 

@@ -98,7 +98,17 @@ int main() {
     IOManager ioManager;
 
     // Estruturas de Processos
-    Scheduler scheduler(SchedulingPolicy::RR, SYSTEM_QUANTUM);
+    int policyOption = 3;
+    SchedulingPolicy policy = SchedulingPolicy::Priority;
+    switch (policyOption){
+        case 0: policy = SchedulingPolicy::FCFS; break;
+        case 1: policy = SchedulingPolicy::SJN; break;
+        case 2: policy = SchedulingPolicy::RR; break;
+        case 3: policy = SchedulingPolicy::Priority; break;
+
+    }
+
+    Scheduler scheduler(policy,SYSTEM_QUANTUM);
     std::vector<std::unique_ptr<PCB>> process_list; // Dono dos ponteiros
     std::vector<PCB*> blocked_list;                 // Fila de bloqueados
 
@@ -199,7 +209,7 @@ int main() {
         // Por enquanto, temos apenas um core rodando sequencialmente
         Core(memManager, *current_process, &io_requests, print_lock);
 
-        // Avalia o resultado da execução
+        // Avalia o resultado da execução quando o quantum acaba, decide o que fazer com ele, se for não preemptivo continua rodando
         switch (current_process->state) {
             case State::Blocked:
                 std::cout << "[Scheduler] PID " << current_process->pid << " solicitou I/O -> Bloqueado.\n";
@@ -214,11 +224,18 @@ int main() {
                 break;
 
             default:
-                // Preempção por Quantum
-                // Depois temos que ver a questão do não preemptivo
-                std::cout << "[Scheduler] PID " << current_process->pid << " fim de Quantum -> Ready Queue.\n";
-                current_process->state = State::Ready;
-                scheduler.addProcess(current_process);
+                if((scheduler.isPreemptive())) {
+                    std::cout << "[Scheduler] PID" << current_process->pid << "fim de quantum (preemptivo) -> Ready Queue.\n";
+                    current_process->state=State::Ready;
+                    scheduler.addProcess(current_process);
+                }
+
+                else{
+                    // Aqui é caso ele for não preemptivo e continua rodando até terminar
+                    std::cout << "[Scheduler] Política não preemptiva: continuando execução do PID "<< current_process->pid << "\n";
+                    current_process->state=State::Running;
+                    scheduler.pushFront(current_process);
+                }
                 break;
         }
     }

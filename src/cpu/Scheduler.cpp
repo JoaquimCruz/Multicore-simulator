@@ -62,7 +62,18 @@ void Scheduler::sortQueue() {
         // Vamos manter a ordem de prioridade como placeholder para SJN por enquanto.
         std::sort(ready_queue.begin(), ready_queue.end(), 
             [](PCB* a, PCB* b) {
-                return a->pipeline_cycles < b->pipeline_cycles; 
+                return a->burst_time < b->burst_time; 
             });
     }
+}
+
+
+//Verifica se a política é preemptiva - RR e Prioruty são preemptivos, mas FCFS não
+bool Scheduler::isPreemptive() const {
+    return (policy == SchedulingPolicy::RR);
+}
+
+void Scheduler::pushFront(PCB* process) {
+    std::lock_guard<std::mutex> lock(queueMutex);
+    ready_queue.push_front(process);
 }

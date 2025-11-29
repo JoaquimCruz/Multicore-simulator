@@ -1,0 +1,6 @@
+{
+  "pid": 2,
+  "name": "Processo B",
+  "priority": 8,
+  "program_path": "src/tasks/tasks_small.json"
+}

@@ -34,6 +34,8 @@ struct PCB {
     std::string program_path;
     int quantum = 0;
     int priority = 0;
+    //Isso aqui vai ser usado principalmente no SJF
+    int burst_time = 0; // número total de instruções carregadas, seria como o tempo estimado de cada processo para usar no SJF
 
     State state = State::Ready;
     hw::REGISTER_BANK regBank;
