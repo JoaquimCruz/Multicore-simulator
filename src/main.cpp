@@ -7,6 +7,8 @@
 #include <filesystem>
 #include <fstream>
 #include "cpu/Scheduler.hpp"
+#include <atomic>
+#include <mutex>
 // Inclua a biblioteca JSON (verifique se o caminho está correto no seu projeto)
 #include "nlohmann/json.hpp"
 
@@ -32,6 +34,7 @@ using json = nlohmann::json;
 */
 
 const int SYSTEM_QUANTUM = 20; 
+const int NUM_CORES=4;
 
 // Função para imprimir as métricas de um processo (MANTIDA IGUAL)
 void print_metrics(const PCB& pcb) {
@@ -89,6 +92,91 @@ void print_metrics(const PCB& pcb) {
         }
         output << "\n=== Fim das Operações Registradas ===\n";
     }
+}
+
+void coreWorker(int coreId, Scheduler& scheduler, MemoryManager& memManager,IOManager& ioManager, std::vector<PCB*>& blocked_list, std::mutex& blocked_mutex,std::atomic<int>& finished_processes, int total_processes){
+    
+    bool print_lock = true;
+    // cada core tem seu vetor de IO request agora
+    std::vector<std::unique_ptr<IORequest>> io_requests;
+
+
+    while (finished_processes.load() < total_processes) {
+        // Verifica desbloqueios de IO
+    {
+        // isso garante que só um core mexa por vez na lista de processos bloqueados
+        std::lock_guard<std::mutex> lock(blocked_mutex);
+        for (auto it = blocked_list.begin(); it != blocked_list.end(); ) {
+            if ((*it)->state == State::Ready) { // IOManager liberou
+                 std::cout << "[Core " << coreId << "] Processo " << (*it)->pid 
+                              << " fim de IO -> Scheduler.\n";
+                scheduler.addProcess(*it); // Devolve pro Scheduler
+                it = blocked_list.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    PCB* current_process = scheduler.getNextProcess();
+
+    if(current_process == nullptr){
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        continue;
+    }
+
+
+    std::cout << "\n[Core " << coreId << "][Scheduler] Executando PID "
+                  << current_process->pid << " (" << current_process->name
+                  << ") - Quantum: " << current_process->quantum << "\n";
+
+    current_process->state = State::Running;
+    io_requests.clear();
+    //todos os cores acessam a memória de forma segura
+    Core(memManager, *current_process, &io_requests, print_lock);
+
+
+    switch (current_process->state) {
+            case State::Blocked:
+                std::cout << "[Core " << coreId << "][Scheduler] PID "
+                          << current_process->pid << " solicitou I/O -> Bloqueado.\n";
+                ioManager.registerProcessWaitingForIO(current_process);
+                {
+                    std::lock_guard<std::mutex> lock(blocked_mutex);
+                    blocked_list.push_back(current_process);
+                }
+                break;
+
+            case State::Finished:
+                std::cout << "[Core " << coreId << "][Scheduler] PID "
+                          << current_process->pid << " FINALIZADO.\n";
+                print_metrics(*current_process);
+                finished_processes.fetch_add(1);
+                break;
+
+            default:
+                if (scheduler.isPreemptive()) {
+                    std::cout << "[Core " << coreId << "][Scheduler] PID "
+                              << current_process->pid
+                              << " fim de quantum (preemptivo) -> Ready Queue.\n";
+                    current_process->state = State::Ready;
+                    scheduler.addProcess(current_process);
+                } else {
+                    std::cout << "[Core " << coreId 
+                              << "][Scheduler] Política não preemptiva: "
+                              << "continuando execução do PID "
+                              << current_process->pid << "\n";
+                    current_process->state = State::Running;
+                    scheduler.pushFront(current_process);
+                }
+                break;
+        }
+    }
+
+    std::cout << "[Core " << coreId << "] Finalizando: todos os processos já terminados.\n";
+
+
+
 }
 
 int main() {
@@ -167,9 +255,42 @@ int main() {
     // 3. Loop Principal do Escalonador (Mantido Single-Core por enquanto)
     std::cout << "\nIniciando execucao com Scheduler...\n";
     
-    int finished_processes = 0;
+    //contador atômico compartilhado
+    std::atomic<int> finished_processes{0};
+    //mutex para lista de bloqueados
+    std::mutex blocked_mutex;
+
+    //cria um vetor de threads, os núcleos
+    std::vector<std::thread> core_threads;
+    core_threads.reserve(NUM_CORES);
+
+
+    std::cout << "\nIniciando execucao MULTICORE com " << NUM_CORES << " nucleos...\n";
+
+    for (int i = 0; i < NUM_CORES; ++i) {
+    core_threads.emplace_back(
+        coreWorker,
+        i,                      // coreId
+        std::ref(scheduler),
+        std::ref(memManager),
+        std::ref(ioManager),
+        std::ref(blocked_list),
+        std::ref(blocked_mutex),
+        std::ref(finished_processes),
+        total_processes
+    );
+    }
+
+    for (auto &t : core_threads) {
+    if (t.joinable()) t.join();
+    }
+
+    std::cout << "\n=== Todos os processos finalizados. Simulador MULTICORE encerrado. ===\n";
+
+    return 0;
+
     
-    while (finished_processes < total_processes) {
+    /*while (finished_processes < total_processes) {
         // Verifica desbloqueios de IO
         for (auto it = blocked_list.begin(); it != blocked_list.end(); ) {
             if ((*it)->state == State::Ready) { // IOManager liberou
@@ -241,5 +362,5 @@ int main() {
     }
 
     std::cout << "\n=== Todos os processos finalizados. Simulador encerrado. ===\n";
-    return 0;
+    return 0; */
 }
