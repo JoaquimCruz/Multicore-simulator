@@ -67,7 +67,8 @@ uint32_t MemoryManager::read(uint32_t virtualAddress, PCB& process) {
     uint32_t physicalAddress = translateAddress(virtualAddress, process, false);
 
     if (physicalAddress == MEMORY_ACCESS_ERROR) {
-        std::cerr << "ERRO: Leitura inválida (Pagina não mapeada) PID " << process.pid << "\n";
+        std::cerr << "ERRO: Leitura inválida no endereço " << virtualAddress 
+                  << " (Pagina " << virtualAddress / PAGE_SIZE << " não mapeada) PID " << process.pid << "\n";
         return 0; 
     }
 

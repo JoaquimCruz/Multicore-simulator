@@ -1,0 +1,6 @@
+{
+  "pid": 6,
+  "name": "Processo Misto",
+  "priority": 2,
+  "program_path": "src/tasks/medium_task.json"
+}

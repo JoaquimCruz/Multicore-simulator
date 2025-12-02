@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "task_id": "prog_io_sim",
+    "author": "grupoPeripherals",
+    "description": "Programa focado em Load/Store para estressar a memoria"
+  },
+  "data": {
+    "vetor": [10, 20, 30, 40, 50],
+    "temp": 0
+  },
+  "program": [
+    { "label": "start", "instruction": "lw", "rt": "$t0", "offset": 0, "base": "vetor" },
+    { "instruction": "lw", "rt": "$t1", "offset": 4, "base": "vetor" },
+    { "instruction": "add", "rd": "$t2", "rs": "$t0", "rt": "$t1" },
+    { "instruction": "sw", "rt": "$t2", "offset": 0, "base": "temp" },
+    
+    { "instruction": "lw", "rt": "$t3", "offset": 8, "base": "vetor" },
+    { "instruction": "sub", "rd": "$t4", "rs": "$t3", "rt": "$t2" },
+    { "instruction": "sw", "rt": "$t4", "offset": 12, "base": "vetor" },
+    
+    { "instruction": "li", "rt": "$t5", "immediate": 999 },
+    { "instruction": "sw", "rt": "$t5", "offset": 16, "base": "vetor" },
+    
+    { "label": "end", "instruction": "end" }
+  ]
+}

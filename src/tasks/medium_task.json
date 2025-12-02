@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "task_id": "prog_medium",
+    "author": "grupoPeripherals",
+    "description": "Programa medio com condicionais"
+  },
+  "data": {
+    "a": 15,
+    "b": 10,
+    "res": 0
+  },
+  "program": [
+    { "label": "start", "instruction": "lw", "rt": "$s0", "offset": 0, "base": "a" },
+    { "instruction": "lw", "rt": "$s1", "offset": 0, "base": "b" },
+    
+    { "instruction": "bgt", "rs": "$s0", "rt": "$s1", "label": "maior" },
+    { "instruction": "sub", "rd": "$s2", "rs": "$s1", "rt": "$s0" },
+    { "instruction": "j", "label": "salvar" },
+    
+    { "label": "maior", "instruction": "sub", "rd": "$s2", "rs": "$s0", "rt": "$s1" },
+    
+    { "label": "salvar", "instruction": "mult", "rd": "$s2", "rs": "$s2", "rt": "$s2" },
+    { "instruction": "sw", "rt": "$s2", "offset": 0, "base": "res" },
+    
+    { "label": "end", "instruction": "end" }
+  ]
+}

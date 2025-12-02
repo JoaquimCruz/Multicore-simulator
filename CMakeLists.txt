@@ -61,8 +61,11 @@ target_link_libraries(test_metrics PRIVATE pthread)
 # 1. Copia os arquivos de configuração de processos e lote
 file(COPY ${CMAKE_SOURCE_DIR}/batch.json DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/process1.json DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY ${CMAKE_SOURCE_DIR}/process2.json DESTINATION ${CMAKE_BINARY_DIR}) # <--- Adicionado
-file(COPY ${CMAKE_SOURCE_DIR}/process3.json DESTINATION ${CMAKE_BINARY_DIR}) # <--- Adicionado
+file(COPY ${CMAKE_SOURCE_DIR}/process2.json DESTINATION ${CMAKE_BINARY_DIR}) 
+file(COPY ${CMAKE_SOURCE_DIR}/process3.json DESTINATION ${CMAKE_BINARY_DIR}) 
+file(COPY ${CMAKE_SOURCE_DIR}/process4.json DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/process5.json DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/process6.json DESTINATION ${CMAKE_BINARY_DIR})
 
 # 2. Cria a estrutura da pasta 'src/tasks' dentro do build
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/src)
