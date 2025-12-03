@@ -1,5 +1,6 @@
 #include "parser_json.hpp"
 #include "MainMemory.hpp"
+#include "PCB.hpp"
 #include <unordered_map>
 #include <fstream>
 #include <algorithm>
@@ -135,7 +136,7 @@ uint32_t encodeRType(const json &j){
     return buildBinaryInstruction(opcode, rs, rt, rd, sh, funct, 0, 0);
 }
 
-uint32_t encodeIType(const json &j, int pcIdx){
+uint32_t encodeIType(const json &j, int pcIdx, int startAddr){
     string mnem = j.at("instruction").get<string>();
     int opcode  = getOpcode(mnem);
     int rs=0, rt=0; int16_t imm=0;
@@ -173,7 +174,10 @@ uint32_t encodeIType(const json &j, int pcIdx){
         if (j.contains("label")){
             const string lbl = j.at("label").get<string>();
             if (!labelMap.count(lbl)) throw runtime_error("Label desconhecida: " + lbl);
-            imm = static_cast<int16_t>(labelMap[lbl] - (pcIdx + 1));
+            int targetAddr = labelMap[lbl];
+            int currentPC = startAddr + (pcIdx * 4);
+            int nextPC = currentPC + 4;
+            imm = static_cast<int16_t>((targetAddr - nextPC) / 4);
         } else if (j.contains("offset")){
             imm = parseImmediate(j.at("offset"));
         } else {
@@ -213,14 +217,14 @@ uint32_t encodeJType(const json &j){
 }
 
 // ======= Parser de instrução =======
-uint32_t parseInstruction(const json &instrJson, int currentInstrIndex){
+uint32_t parseInstruction(const json &instrJson, int currentInstrIndex, int startAddr) {
     const string mnem = instrJson.at("instruction").get<string>();
     if (mnem=="end" || mnem=="print")  // custom simples
         return static_cast<uint32_t>(getOpcode(mnem)) << 26;
 
     if (functMap.count(mnem))              return encodeRType(instrJson);
     if (mnem=="j" || mnem=="jal")          return encodeJType(instrJson);
-    return encodeIType(instrJson, currentInstrIndex);
+    return encodeIType(instrJson, currentInstrIndex, startAddr);
 }
 
 // ======= Seções =======
@@ -298,7 +302,7 @@ int parseData(const json &dataJson, MainMemory &ram, int startAddr){
     return addr;
 }
 
-int parseProgram(const json &programJson, MainMemory &ram, int startAddr) {
+int parseProgram(const json &programJson, MainMemory &ram, PCB& pcb, int startAddr) {
     if (!programJson.is_array()) {
         return startAddr;
     }
@@ -306,21 +310,17 @@ int parseProgram(const json &programJson, MainMemory &ram, int startAddr) {
     // 1) Mapear todas as labels para seus endereços de instrução.
     //    Este loop percorre o programa para encontrar todas as labels antes de
     //    começar a traduzir as instruções.
-    int instruction_address_counter = 0;
+    int current_byte_addr = startAddr; 
     for (const auto &node : programJson) {
-        // Se o objeto JSON atual tiver uma chave "label"...
         if (node.contains("label")) {
-            // ...salvamos o nome da label e o endereço da instrução atual no mapa.
-            labelMap[node["label"].get<string>()] = instruction_address_counter;
+            labelMap[node["label"].get<string>()] = current_byte_addr;
         }
-
-        // O contador de endereço só avança se houver de fato uma instrução na linha.
-        // Isso garante que os endereços das labels fiquem corretos.
         if (node.contains("instruction")) {
-            instruction_address_counter++;
+            current_byte_addr += 4; // Avança 4 bytes por instrução
         }
     }
 
+    pcb.burst_time = (current_byte_addr - startAddr) / 4;
 
     // 2) Codificar e escrever as instruções na memória.
     //    Este loop permanece como você fez, pois a lógica está correta.
@@ -333,7 +333,7 @@ int parseProgram(const json &programJson, MainMemory &ram, int startAddr) {
         }
         
         // Traduz a instrução para binário
-        uint32_t binary_instruction = parseInstruction(node, current_instruction_addr);
+        uint32_t binary_instruction = parseInstruction(node, current_instruction_addr, startAddr);
         
         // Escreve a instrução na memória
         ram.WriteMem(current_mem_addr, binary_instruction);

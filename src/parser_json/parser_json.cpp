@@ -1,17 +1,17 @@
 #include "parser_json.hpp"
-#include "../memory/MemoryManager.hpp" // Alterado de MainMemory.hpp
-#include "../cpu/PCB.hpp"              // Incluído para a função write
 #include <unordered_map>
 #include <fstream>
 #include <algorithm>
 #include <cctype>
 #include <vector>
 #include <stdexcept>
+#include <iostream>
+#include <iomanip>
 
 using namespace std;
 using nlohmann::json;
 
-// ======= Tabelas (sem alterações) =======
+// ======= Tabelas =======
 const unordered_map<string, int> instructionMap = {
     {"add",0}, {"sub",0}, {"and",0}, {"or",0}, {"mult",0}, {"div",0}, {"sll",0}, {"srl",0}, {"jr",0},
     {"addi",0b001000}, {"andi",0b001100}, {"ori",0b001101}, {"slti",0b001010},
@@ -33,10 +33,10 @@ const unordered_map<string, int> registerMap = {
     {"$t8",24},{"$t9",25},{"$k0",26},{"$k1",27},{"$gp",28},{"$sp",29},{"$fp",30},{"$ra",31}
 };
 
-static unordered_map<string, int> dataMap;
-static unordered_map<string, int> labelMap;
+// Mapas globais (Resetados a cada carga)
+static unordered_map<string, int> dataMap;   
+static unordered_map<string, int> labelMap;  
 
-// ======= Utils e Helpers (sem alterações) =======
 string toLower(string s){
     transform(s.begin(), s.end(), s.begin(), [](unsigned char c){return std::tolower(c);});
     return s;
@@ -55,11 +55,11 @@ pair<int16_t,int> parseOffsetBase(const string &addrExpr){
     auto l = addrExpr.find('(');
     auto r = addrExpr.find(')');
     if (l==string::npos || r==string::npos || r<=l+1)
-        throw runtime_error("Endereço inválido (esperado offset(base)): " + addrExpr);
+        throw runtime_error("Endereço inválido: " + addrExpr);
     int16_t off = static_cast<int16_t>(std::stoi(addrExpr.substr(0,l)));
     string base = addrExpr.substr(l+1, r-l-1);
     auto it = registerMap.find(toLower(base));
-    if (it==registerMap.end()) throw runtime_error("Registrador base inválido: " + base);
+    if (it==registerMap.end()) throw runtime_error("Base inválida: " + base);
     return {off, it->second};
 }
 
@@ -80,10 +80,8 @@ int getFunct(const string &instr){
     return (it!=functMap.end())? it->second : 0;
 }
 
-uint32_t buildBinaryInstruction(int opcode, int rs, int rt, int rd, int shamt, int funct,
-                                int immediate, int address)
-{
-    if (opcode == 0){ // R
+uint32_t buildBinaryInstruction(int opcode, int rs, int rt, int rd, int shamt, int funct, int immediate, int address){
+    if (opcode == 0){ // R-Type
         uint32_t w=0;
         w |= (opcode & 0x3F) << 26;
         w |= (rs     & 0x1F) << 21;
@@ -92,12 +90,12 @@ uint32_t buildBinaryInstruction(int opcode, int rs, int rt, int rd, int shamt, i
         w |= (shamt  & 0x1F) <<  6;
         w |= (funct  & 0x3F);
         return w;
-    } else if (opcode == 0b000010 || opcode == 0b000011){ // J/JAL
+    } else if (opcode == 0b000010 || opcode == 0b000011){ // J-Type
         uint32_t w=0;
         w |= (opcode & 0x3F) << 26;
         w |= (address & 0x03FFFFFF);
         return w;
-    } else { // I
+    } else { // I-Type
         uint32_t w=0;
         w |= (opcode & 0x3F) << 26;
         w |= (rs     & 0x1F) << 21;
@@ -107,13 +105,11 @@ uint32_t buildBinaryInstruction(int opcode, int rs, int rt, int rd, int shamt, i
     }
 }
 
-// ======= Encoders (sem alterações) =======
 uint32_t encodeRType(const json &j){
     const string mnem = j.at("instruction").get<string>();
     int opcode = getOpcode(mnem);
     int funct  = getFunct(mnem);
     int rs=0, rt=0, rd=0, sh=0;
-
     if (mnem=="sll" || mnem=="srl"){
         rd = getRegisterCode(j.at("rd").get<string>());
         rt = getRegisterCode(j.at("rt").get<string>());
@@ -128,19 +124,18 @@ uint32_t encodeRType(const json &j){
     return buildBinaryInstruction(opcode, rs, rt, rd, sh, funct, 0, 0);
 }
 
-uint32_t encodeIType(const json &j, int pcIdx){
+uint32_t encodeIType(const json &j, int pcIdx, int startAddr){
     string mnem = j.at("instruction").get<string>();
     int opcode  = getOpcode(mnem);
     int rs=0, rt=0; int16_t imm=0;
 
-    if (mnem=="li"){
+    if (mnem=="li"){ 
         opcode = getOpcode("addi");
         rt = getRegisterCode(j.at("rt").get<string>());
         rs = getRegisterCode("$zero");
         imm = parseImmediate(j.at("immediate"));
         return buildBinaryInstruction(opcode, rs, rt, 0, 0, 0, imm, 0);
     }
-
     if (mnem=="lw" || mnem=="sw"){
         rt = getRegisterCode(j.at("rt").get<string>());
         if (j.contains("addr")){
@@ -149,7 +144,7 @@ uint32_t encodeIType(const json &j, int pcIdx){
         } else if (j.contains("baseReg")){
             rs = getRegisterCode(j.at("baseReg").get<string>());
             imm = j.contains("offset") ? parseImmediate(j.at("offset")) : 0;
-        } else if (j.contains("base")){
+        } else if (j.contains("base")){ 
             rs = getRegisterCode("$zero");
             const string lbl = j.at("base").get<string>();
             if (!dataMap.count(lbl)) throw runtime_error("Label de dados desconhecida: " + lbl);
@@ -160,17 +155,26 @@ uint32_t encodeIType(const json &j, int pcIdx){
         return buildBinaryInstruction(opcode, rs, rt, 0, 0, 0, imm, 0);
     }
 
+    // Branch (BEQ, BNE, BGT, BLT)
     if (mnem=="beq" || mnem=="bne" || mnem=="bgt" || mnem=="blt"){
         rs = getRegisterCode(j.at("rs").get<string>());
         rt = getRegisterCode(j.at("rt").get<string>());
-        if (j.contains("label")){
-            const string lbl = j.at("label").get<string>();
-            if (!labelMap.count(lbl)) throw runtime_error("Label desconhecida: " + lbl);
-            imm = static_cast<int16_t>(labelMap[lbl] - (pcIdx + 1));
+        
+        
+        string targetLabelName;
+        // Prioridade 1: 'label1' // Coloquei aqui porque eu nomeei uma labei assim no caso teste kkkk
+        if (j.contains("label1")) targetLabelName = j.at("label1").get<string>();
+        // Prioridade 2: 'label' 
+        else if (j.contains("label")) targetLabelName = j.at("label").get<string>();
+        
+        if (!targetLabelName.empty()){
+            if (!labelMap.count(targetLabelName)) throw runtime_error("Label de desvio desconhecida: " + targetLabelName);
+            // Endereço absoluto para o simulador
+            imm = static_cast<int16_t>(labelMap[targetLabelName]); 
         } else if (j.contains("offset")){
             imm = parseImmediate(j.at("offset"));
         } else {
-            throw runtime_error(mnem + " requer 'label' ou 'offset'");
+            throw runtime_error(mnem + " requer label alvo ('label' ou 'label1') ou 'offset'");
         }
         return buildBinaryInstruction(opcode, rs, rt, 0, 0, 0, imm, 0);
     }
@@ -184,11 +188,15 @@ uint32_t encodeIType(const json &j, int pcIdx){
 uint32_t encodeJType(const json &j){
     const string mnem = j.at("instruction").get<string>();
     int opcode = getOpcode(mnem);
+    
+    // LÓGICA UNIVERSAL DE TARGET (Jumps):
+    if (j.contains("label") || j.contains("label1")){
+        string targetLabelName;
+        if (j.contains("label1")) targetLabelName = j.at("label1").get<string>();
+        else targetLabelName = j.at("label").get<string>();
 
-    if (j.contains("label")){
-        const string lbl = j.at("label").get<string>();
-        if (!labelMap.count(lbl)) throw runtime_error("Label desconhecida (J): " + lbl);
-        int addr = labelMap[lbl] & 0x03FFFFFF;
+        if (!labelMap.count(targetLabelName)) throw runtime_error("Label de Jump desconhecida: " + targetLabelName);
+        int addr = labelMap[targetLabelName] & 0x03FFFFFF; 
         return buildBinaryInstruction(opcode, 0,0,0,0,0, 0, addr);
     }
     if (j.contains("address")){
@@ -204,142 +212,129 @@ uint32_t encodeJType(const json &j){
     throw runtime_error("J-type requer 'label' ou 'address'");
 }
 
-uint32_t parseInstruction(const json &instrJson, int currentInstrIndex){
+uint32_t parseInstruction(const json &instrJson, int currentInstrIndex, int startAddr) {
     const string mnem = instrJson.at("instruction").get<string>();
     if (mnem=="end" || mnem=="print")
         return static_cast<uint32_t>(getOpcode(mnem)) << 26;
-
     if (functMap.count(mnem))              return encodeRType(instrJson);
     if (mnem=="j" || mnem=="jal")          return encodeJType(instrJson);
-    return encodeIType(instrJson, currentInstrIndex);
+    return encodeIType(instrJson, currentInstrIndex, startAddr);
 }
 
-// ======= Seções (Alteradas para usar MemoryManager) =======
 int parseData(const json &dataJson, MemoryManager &memManager, PCB& pcb, int startAddr){
-    int addr = startAddr;
-
+    int addr = startAddr; 
     if (dataJson.is_object()){
         for (auto it = dataJson.begin(); it != dataJson.end(); ++it){
             const string key = it.key();
             const json& val  = it.value();
-            dataMap[key] = addr;
+            dataMap[key] = addr; 
             if (val.is_array()){
                 for (auto &e : val){
-                    int w = e.is_string()? static_cast<int>(std::stoul(e.get<string>(),nullptr,0))
-                                          : e.get<int>();
-                    memManager.write(addr, w, pcb); // Alterado aqui
+                    int w = e.is_string()? static_cast<int>(std::stoul(e.get<string>(),nullptr,0)) : e.get<int>();
+                    memManager.write(addr, w, pcb); 
                     addr += 4;
                 }
             } else {
-                int w = val.is_string()? static_cast<int>(std::stoul(val.get<string>(),nullptr,0))
-                                        : val.get<int>();
-                memManager.write(addr, w, pcb); // Alterado aqui
+                int w = val.is_string()? static_cast<int>(std::stoul(val.get<string>(),nullptr,0)) : val.get<int>();
+                memManager.write(addr, w, pcb);
                 addr += 4;
             }
         }
         return addr;
     }
-
     if (dataJson.is_array()){
-        vector<uint8_t> bytes;
-        auto flushBytes = [&](){
-            for (size_t i=0;i<bytes.size(); i+=4){
-                uint32_t w=0;
-                for (size_t j=0;j<4 && i+j<bytes.size(); ++j) w = (w<<8) | bytes[i+j];
-                memManager.write(addr, w, pcb); // Alterado aqui
-                addr += 4;
-            }
-            bytes.clear();
-        };
         for (const auto &item : dataJson){
-            string type = toLower(item.value("type","word"));
             string label = item.value("label", string());
             if (!label.empty()) dataMap[label] = addr;
-
-            if (type=="word"){
-                flushBytes();
-                if (item["value"].is_array()){
-                    for (auto &v : item["value"]){
-                        int w = v.is_string()? static_cast<int>(std::stoul(v.get<string>(),nullptr,0))
-                                             : v.get<int>();
-                        memManager.write(addr, w, pcb); // Alterado aqui
-                        addr += 4;
-                    }
-                } else {
-                    int w = item["value"].is_string()? static_cast<int>(std::stoul(item["value"].get<string>(),nullptr,0))
-                                                      : item["value"].get<int>();
-                    memManager.write(addr, w, pcb); // Alterado aqui
+             if (item["value"].is_array()){
+                for (auto &v : item["value"]){
+                    int w = v.is_string()? static_cast<int>(std::stoul(v.get<string>(),nullptr,0)) : v.get<int>();
+                    memManager.write(addr, w, pcb); 
                     addr += 4;
                 }
-            } else if (type=="byte"){
-                if (item["value"].is_array()){
-                    for (auto &v : item["value"]){
-                        uint8_t b = v.is_string()? static_cast<uint8_t>(std::stoul(v.get<string>(),nullptr,0))
-                                                  : static_cast<uint8_t>(v.get<int>());
-                        bytes.push_back(b);
-                    }
-                } else {
-                    uint8_t b = item["value"].is_string()? static_cast<uint8_t>(std::stoul(item["value"].get<string>(),nullptr,0))
-                                                          : static_cast<uint8_t>(item["value"].get<int>());
-                    bytes.push_back(b);
-                }
+            } else {
+                int w = item["value"].is_string()? static_cast<int>(std::stoul(item["value"].get<string>(),nullptr,0)) : item["value"].get<int>();
+                memManager.write(addr, w, pcb);
+                addr += 4;
             }
         }
-        flushBytes();
     }
     return addr;
 }
 
 int parseProgram(const json &programJson, MemoryManager &memManager, PCB& pcb, int startAddr) {
-    if (!programJson.is_array()) {
-        return startAddr;
-    }
-
-    int instruction_address_counter = 0;
+    if (!programJson.is_array()) return startAddr;
+    int current_byte_addr = startAddr; 
+    
+    
     for (const auto &node : programJson) {
-        if (node.contains("label")) {
-            labelMap[node["label"].get<string>()] = instruction_address_counter;
-        }
         if (node.contains("instruction")) {
-            instruction_address_counter++;
+            string mnem = toLower(node["instruction"].get<string>());
+            
+            bool isBranch = (mnem == "j" || mnem == "jal" || mnem == "beq" || mnem == "bne" || mnem == "bgt" || mnem == "blt");
+            bool definesLabel = false;
+
+            if (node.contains("label")) {
+                if (!isBranch) {
+                    // Se não é branch, 'label' é sempre definição
+                    definesLabel = true;
+                } else {
+                    // Se é branch:
+                    //Tem 'label1' como alvo -> 'label' é definição.
+                    if (node.contains("label1")) {
+                        definesLabel = true;
+                    } 
+                    // Não tem 'label1' -> 'label' é alvo.
+                    else {
+                        definesLabel = false;
+                    }
+                }
+                
+                if (definesLabel) {
+                    labelMap[node["label"].get<string>()] = current_byte_addr;
+                }
+            }
+            current_byte_addr += 4; 
         }
     }
 
-    //passamos o número de instruções para o pcb  poder usar no SJF
-    pcb.burst_time = instruction_address_counter;
-
+    pcb.burst_time = (current_byte_addr - startAddr) / 4;
+    if (labelMap.count("start")) {
+        pcb.regBank.pc.write(labelMap["start"]);
+    } else {
+        pcb.regBank.pc.write(startAddr);
+    }
+    
+    cout << "[PARSER] PID " << pcb.pid << " carregado. PC Inicial = " << pcb.regBank.pc.read() << endl;
+    
     int current_mem_addr = startAddr;
-    int current_instruction_addr = 0;
+    int current_instruction_idx = 0;
+    
+    // PASS 2: CODIFICAÇÃO
     for (const auto &node : programJson) {
-        if (!node.contains("instruction")) {
-            continue;
-        }
-        
-        uint32_t binary_instruction = parseInstruction(node, current_instruction_addr);
-        
-        memManager.write(current_mem_addr, binary_instruction, pcb); // Alterado aqui
-        
+        if (!node.contains("instruction")) continue;
+        uint32_t binary_instruction = parseInstruction(node, current_instruction_idx, startAddr);
+        memManager.write(current_mem_addr, binary_instruction, pcb);
         current_mem_addr += 4;
-        current_instruction_addr++;
+        current_instruction_idx++;
     }
-
     return current_mem_addr;
 }
 
-// ======= Loader (Alterado para usar MemoryManager) =======
 static json readJsonFile(const string &filename){
     ifstream f(filename);
     if (!f) throw runtime_error("Não foi possível abrir: " + filename);
     json j; f >> j; return j;
 }
 
-int loadJsonProgram(const string &filename, MemoryManager &memManager, PCB& pcb, int startAddr){
+int loadJsonProgram(const string &filename, MemoryManager &memManager, PCB &pcb, int startAddr){
+    // Limpa mapas para evitar contaminação entre processos
     dataMap.clear();
     labelMap.clear();
 
     json j = readJsonFile(filename);
     int addr = startAddr;
-    if (j.contains("data"))    addr = parseData(j["data"], memManager, pcb, addr);
+    if (j.contains("data"))    addr = parseData(j["data"],    memManager, pcb, addr);
     if (j.contains("program")) addr = parseProgram(j["program"], memManager, pcb, addr);
     return addr;
 }

@@ -1,5 +1,10 @@
 {
   "processes": [
+    "process1.json",
+    "process2.json",
+    "process3.json",
+    "process4.json",
+    "process5.json",
     "process6.json"
   ]
 }
