@@ -67,16 +67,39 @@ struct Control_Unit {
 
     void Fetch(ControlContext &context);
     void Decode(hw::REGISTER_BANK &registers, Instruction_Data &data);
-    void Execute_Aritmetic_Operation(hw::REGISTER_BANK &registers, Instruction_Data &d);
+    //Passa o Contexto
+    void Execute_Aritmetic_Operation(ControlContext &context, Instruction_Data &d);
     void Execute_Operation(Instruction_Data &data, ControlContext &context);
     void Execute_Loop_Operation(hw::REGISTER_BANK &registers, Instruction_Data &d,
-                                int &counter, int &counterForEnd, bool &endProgram,
-                                MemoryManager &memManager, PCB &process);
+                        int &counter, int &counterForEnd, bool &endProgram,
+                        MemoryManager &memManager, PCB &process);
     void Execute(Instruction_Data &data, ControlContext &context);
-    void Execute_Immediate_Operation(hw::REGISTER_BANK &registers, Instruction_Data &data);
-    void log_operation(const std::string &msg);
+    //Passa o Contexto
+    void Execute_Immediate_Operation(ControlContext &context, Instruction_Data &data);
+
+
+    void log_operation(const std::string &msg, int pid);
+    
     void Memory_Acess(Instruction_Data &data, ControlContext &context);
     void Write_Back(Instruction_Data &data, ControlContext &context);
 };
+
+//     // Assinatura corrigida para corresponder à implementação
+//     string Identificacao_instrucao(uint32_t instruction, hw::REGISTER_BANK &registers);
+
+//     void Fetch(ControlContext &context);
+//     void Decode(hw::REGISTER_BANK &registers, Instruction_Data &data);
+//     void Execute_Aritmetic_Operation(hw::REGISTER_BANK &registers, Instruction_Data &d);
+//     void Execute_Operation(Instruction_Data &data, ControlContext &context);
+//     void Execute_Loop_Operation(hw::REGISTER_BANK &registers, Instruction_Data &d,
+//                                 int &counter, int &counterForEnd, bool &endProgram,
+//                                 MemoryManager &memManager, PCB &process);
+//     void Execute(Instruction_Data &data, ControlContext &context);
+//     void Execute_Immediate_Operation(hw::REGISTER_BANK &registers, Instruction_Data &data);
+//     // void log_operation(const std::string &msg);
+//     void log_operation(const std::string &msg, int pid);
+//     void Memory_Acess(Instruction_Data &data, ControlContext &context);
+//     void Write_Back(Instruction_Data &data, ControlContext &context);
+// };
 
 #endif // CONTROL_UNIT_HPP
