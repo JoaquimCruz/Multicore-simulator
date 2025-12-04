@@ -9,7 +9,6 @@
 #include "cpu/Scheduler.hpp"
 #include <atomic>
 #include <mutex>
-// Inclua a biblioteca JSON (verifique se o caminho está correto no seu projeto)
 #include "nlohmann/json.hpp"
 
 #include "cpu/PCB.hpp"
@@ -22,14 +21,10 @@
 using json = nlohmann::json;
 
 /*
-    Por enquanto, implementei um Scheduler simples baseado em Round-Robin (RR)
-    com quantum fixo definido pelo sistema operacional.
-    O loop principal do escalonador seleciona o próximo processo da fila de prontos,
-    executa-o por um quantum ou até que ele bloqueie/termine, e então reavalia a fila.
-    Processos que solicitam I/O são movidos para uma fila de bloqueados e retornam quando o I/O é concluído.
-    O escalonador continua até que todos os processos tenham terminado sua execução.    
-    
-    Temos que expandir isso para suportar múltiplos núcleos e políticas adicionais depois.
+    O projeto já implementa o multicore com 4 cores e um quantum de 20 ciclos para cada processo. 
+    Já temos o Io Worker para controlar a espera ociosa por I/O.
+    A função Core() foi adaptada para ser thread-safe e cada core possui sua própria fila de requisições de I/O.
+    Falta agora fazer o swap para quando a memória RAM estiver cheia.
 
 */
 void* Core(MemoryManager &memoryManager, PCB &process, std::vector<std::unique_ptr<IORequest>>* ioRequests, bool &printLock);
@@ -367,7 +362,7 @@ const int NUM_CORES=4;
 // }
 
 
-// Função para imprimir as métricas de um processo (CORRIGIDA PARA MULTICORE)
+// Função para imprimir as métricas de um processo 
 void print_metrics(const PCB& pcb) {
     std::cout << "\n--- METRICAS FINAIS DO PROCESSO " << pcb.pid << " ---\n";
     std::cout << "Nome do Processo:       " << pcb.name << "\n";
@@ -405,10 +400,9 @@ void print_metrics(const PCB& pcb) {
         output << pcb.regBank.get_registers_as_string() << "\n";
         output << "\n=== Operações Executadas ===\n";
 
-        // CORREÇÃO CRÍTICA DO LOG: Lê apenas o arquivo temporário específico do PID
         std::string temp_filename = "output/temp_" + std::to_string(pcb.pid) + ".log";
         
-        // Removemos o fallback para temp_1.log
+        
         if (std::filesystem::exists(temp_filename)) { 
             std::ifstream temp_file(temp_filename);
             if (temp_file.is_open()) {
@@ -425,7 +419,18 @@ void print_metrics(const PCB& pcb) {
     }
 }
 
-//Funcao dedicada para gerenciar o desbloqueio de IO (Responsabilidade Única)
+/*
+
+    Opa, Michel, blz?
+    
+    A função coreWorker abaixo ela usa std::this_thread::sleep_for(std::chrono::milliseconds(5))
+    para evitar espera ociosa que consome CPU desnecessariamente. Nós decidimos não usar nenhuma variável
+    de condição para simplificar a implementação e evitar complexidade adicional. Por isso, usamos 
+    a função da biblioteca thread para pausar a execução da thread por um curto período. 
+
+*/
+
+//Funcao dedicada para gerenciar o desbloqueio de IO 
 void ioWorker(Scheduler &scheduler, std::vector<PCB*> &blocked_list, 
               std::mutex &blocked_mutex, std::atomic<int> &finished_processes, 
               const int total_processes) 
@@ -452,18 +457,15 @@ void ioWorker(Scheduler &scheduler, std::vector<PCB*> &blocked_list,
 }
 
 
-// coreWorker CORRIGIDO: Foco exclusivo em Escalonamento e Execução
+// coreWorker 
 void coreWorker(int coreId, Scheduler& scheduler, MemoryManager& memManager,IOManager& ioManager, std::vector<PCB*>& blocked_list, std::mutex& blocked_mutex,std::atomic<int>& finished_processes, int total_processes){
     
     bool print_lock = true;
     std::vector<std::unique_ptr<IORequest>> io_requests;
 
-    // Loop corrigido: Continua rodando enquanto houver trabalho
+    
     while (finished_processes.load() < total_processes || scheduler.hasProcesses()) {
-        
-        // O BLOCO DE VERIFICAÇÃO DE I/O FOI REMOVIDO DAQUI
-        // A lógica de desbloqueio agora está na thread ioWorker.
-
+    
         PCB* current_process = scheduler.getNextProcess();
 
         if(current_process == nullptr){
@@ -527,7 +529,7 @@ void coreWorker(int coreId, Scheduler& scheduler, MemoryManager& memManager,IOMa
 int main() {
     // 1. Inicialização dos Módulos Principais
     std::cout << "=== Inicializando o Simulador Multicore (Fase 1: Limpeza) ===\n";
-    MemoryManager memManager(1024, 8192);
+    MemoryManager memManager(192, 8192);
     IOManager ioManager;
 
     // Estruturas de Processos
@@ -634,7 +636,7 @@ int main() {
         if (t.joinable()) t.join();
     }
     
-    // CRUCIAL: Espera pela thread de IO para garantir que todos os processos se completem
+    //Espera pela thread de IO para garantir que todos os processos se completem
     if (io_thread.joinable()) {
         io_thread.join();
     }

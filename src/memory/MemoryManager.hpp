@@ -6,6 +6,7 @@
 #include <mutex> 
 #include <vector>
 #include <algorithm>
+#include <map>
 #include "MAIN_MEMORY.hpp"
 #include "SECONDARY_MEMORY.hpp"
 #include "cache.hpp" 
@@ -13,6 +14,13 @@
 
 // 32 palavras por página, não sei se o tamanho é esse.
 const size_t PAGE_SIZE = 32;
+
+struct FrameInfo {
+    PCB* ownerProcess = nullptr;
+    int virtualPageNumber = -1;
+};
+
+
 
 class MemoryManager {
 public:
@@ -38,12 +46,29 @@ private:
     std::recursive_mutex memMutex; 
 
     size_t mainMemoryLimit;
+    size_t numFrames;
+
 
     std::vector<bool>framesMap;
+    std::vector<FrameInfo> frameOwnerTable;
+
+    // Tabela de Swap: {PID, PáginaVirtual} -> EndereçoFísicoNoDisco
+    std::map<std::pair<int, int>, uint32_t> swapTable;
+
+    uint32_t nextSwapAddress;
+
+    // Ponteiro para algoritmo FIFO/Clock
+    int victimFramePtr;
 
     // Métodos da MMU
     uint32_t translateAddress(uint32_t virtualAddress, PCB& process, bool isWrite);
-    int allocateFrame();
+    int allocateFrame(PCB& process, int virtualPage);
+
+    // Remove uma página da RAM para o Disco (retorna o índice do frame liberado)
+    int swapOut();
+
+    // Traz uma página do Disco para a RAM
+    void swapIn(int frameIndex, PCB& process, int virtualPage, uint32_t diskAddress);
 };
 
 #endif 

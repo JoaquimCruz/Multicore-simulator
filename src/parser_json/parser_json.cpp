@@ -162,9 +162,9 @@ uint32_t encodeIType(const json &j, int pcIdx, int startAddr){
         
         
         string targetLabelName;
-        // Prioridade 1: 'label1' // Coloquei aqui porque eu nomeei uma labei assim no caso teste kkkk
+        // 'label1' // Coloquei aqui porque eu nomeei uma labei assim no caso teste kkkk
         if (j.contains("label1")) targetLabelName = j.at("label1").get<string>();
-        // Prioridade 2: 'label' 
+        // 'label' 
         else if (j.contains("label")) targetLabelName = j.at("label").get<string>();
         
         if (!targetLabelName.empty()){

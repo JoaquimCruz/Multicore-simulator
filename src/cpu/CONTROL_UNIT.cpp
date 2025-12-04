@@ -17,12 +17,7 @@
 static std::mutex log_mutex;
 using namespace std;
 
-// ... (Funções auxiliares log_operation, binaryStringToUint, signExtend16, regIndexToBitString, toBinStr, account_... permanecem iguais)
-// Certifique-se de copiar as funções auxiliares do código anterior ou mantê-las aqui.
-// Para economizar espaço, vou focar nas funções principais alteradas.
 
-// [Copie aqui as funções auxiliares: log_operation até Get_source_Register]
-// ...
 // void Control_Unit::log_operation(const std::string &msg) {
 //     std::lock_guard<std::mutex> lock(log_mutex);
 //     static int temp_file_id = 1; 
@@ -155,7 +150,7 @@ void Control_Unit::Decode(hw::REGISTER_BANK &registers, Instruction_Data &data) 
     data.rawInstruction = instruction;
     data.op = Identificacao_instrucao(instruction, registers);
 
-    // DEBUG CRÍTICO: Ver o que está sendo decodificado
+    // Log para debug, sei que não é a melhor maneira, porém estou com preguiça de debugar.
     std::cout << "[DECODE] PC-4: " << (registers.pc.read()-4) << " Raw: " << std::hex << instruction << " OP: " << data.op << std::dec << "\n";
 
     if (data.op == "BUBBLE" || data.op == "") return;
@@ -191,7 +186,7 @@ void Control_Unit::Decode(hw::REGISTER_BANK &registers, Instruction_Data &data) 
         }
     }
 
-    // --- DETECÇÃO DE HAZARD ---
+    // Detecção de hazards simples (RAW) - insere bolha se necessário
     std::string read_reg1 = "";
     std::string read_reg2 = "";
 
@@ -293,7 +288,7 @@ void Control_Unit::Decode(hw::REGISTER_BANK &registers, Instruction_Data &data) 
 // }
 
 
-// Mudar assinatura para receber ControlContext (Execute_Immediate)
+
 void Control_Unit::Execute_Immediate_Operation(ControlContext &context, Instruction_Data &data) {
     if (data.op.empty() || data.op == "BUBBLE") return;
     hw::REGISTER_BANK &registers = context.registers; // Acessa os registradores via contexto
@@ -308,18 +303,18 @@ void Control_Unit::Execute_Immediate_Operation(ControlContext &context, Instruct
         ALU alu; alu.A = val_rs; alu.B = imm; alu.op = ADD; alu.calculate();
         registers.writeRegister(name_rt, alu.result);
         ss << "[IMM] " << data.op << " " << name_rt << " = " << name_rs << "(" << val_rs << ") + " << imm << " -> " << alu.result;
-        log_operation(ss.str(), context.process.pid); return; // 🟢 Chamada corrigida
+        log_operation(ss.str(), context.process.pid); return; 
     }
     if (data.op == "SLTI") {
         int32_t res = (val_rs < imm) ? 1 : 0; registers.writeRegister(name_rt, res);
         ss << "[IMM] SLTI " << name_rt << " = (" << name_rs << "(" << val_rs << ") < " << imm << ") ? 1 : 0 -> " << res;
-        log_operation(ss.str(), context.process.pid); return; // 🟢 Chamada corrigida
+        log_operation(ss.str(), context.process.pid); return; 
     }
     if (data.op == "LUI") {
         uint32_t uimm = static_cast<uint32_t>(static_cast<uint16_t>(imm));
         int32_t val = static_cast<int32_t>(uimm << 16); registers.writeRegister(name_rt, val);
         ss << "[IMM] LUI " << name_rt << " = (0x" << std::hex << imm << " << 16) -> 0x" << val << std::dec;
-        log_operation(ss.str(), context.process.pid); return; // 🟢 Chamada corrigida
+        log_operation(ss.str(), context.process.pid); return; 
     }
     if (data.op == "LI") {
         registers.writeRegister(name_rt, imm);
@@ -328,7 +323,6 @@ void Control_Unit::Execute_Immediate_Operation(ControlContext &context, Instruct
     }
 }
 
-//Mudar assinatura para receber ControlContext (Execute_Aritmetic)
 void Control_Unit::Execute_Aritmetic_Operation(ControlContext &context, Instruction_Data &data) {
     if (data.op.empty() || data.op == "BUBBLE") return;
     hw::REGISTER_BANK &registers = context.registers; // Acessa os registradores via contexto
@@ -349,6 +343,8 @@ void Control_Unit::Execute_Aritmetic_Operation(ControlContext &context, Instruct
     ss << "[ARIT] " << data.op << " " << name_rd << " = " << name_rs << "(" << val_rs << ") " << data.op << " " << name_rt << "(" << val_rt << ") = " << alu.result;
     log_operation(ss.str(), context.process.pid); 
 }
+
+
 void Control_Unit::Execute_Operation(Instruction_Data &data, ControlContext &context) {
     if (data.op == "PRINT") {
         if (!data.target_register.empty()) {
@@ -430,21 +426,30 @@ void Control_Unit::Execute(Instruction_Data &data, ControlContext &context) {
     }
 }
 
+// Funcao que realiza a etapa de acesso a memoria por meio de diferentes instrucoes
 void Control_Unit::Memory_Acess(Instruction_Data &data, ControlContext &context) {
     account_stage(context.process);
     if (data.op.empty() || data.op == "BUBBLE") return;
 
     string name_rt = this->map.getRegisterName(binaryStringToUint(data.target_register));
+
+    // transferencia de uma palavra de 4 bits para o registrador ( string name_rt )
     if (data.op == "LW") {
+
         uint32_t addr = binaryStringToUint(data.addressRAMResult);
         int value = context.memManager.read(addr, context.process);
         context.registers.writeRegister(name_rt, value);
         std::cout << "[MEMORY] LW addr=" << addr << " value=" << value << " -> " << name_rt << "\n";
+    
+    // LA e LI carregam um valor imediato para o registrador, sendo o LI podendo ser de 32 ou 16 bits
     } else if (data.op == "LA" || data.op == "LI") {
+
         uint32_t val = binaryStringToUint(data.addressRAMResult);
         context.registers.writeRegister(name_rt, static_cast<int>(val));
         std::cout << "[MEMORY] " << data.op << " -> " << name_rt << " value=" << static_cast<int>(val) << "\n";
+
     } else if (data.op == "PRINT" && data.target_register.empty()) {
+
         uint32_t addr = binaryStringToUint(data.addressRAMResult);
         int value = context.memManager.read(addr, context.process);
         auto req = std::make_unique<IORequest>();
@@ -452,13 +457,16 @@ void Control_Unit::Memory_Acess(Instruction_Data &data, ControlContext &context)
         req->process = &context.process;
         context.ioRequests.push_back(std::move(req));
         std::cout << "[PRINT-REQ] PRINT MEM addr=" << addr << " value=" << value << " (pid=" << context.process.pid << "\n";
+
         if (context.printLock) {
             context.process.state = State::Blocked;
             context.endExecution = true;
         }
+
     }
 }
 
+// Funcao que realiza a etapa de escrita de volta ao banco de registradores ou memoria
 void Control_Unit::Write_Back(Instruction_Data &data, ControlContext &context) {
     account_stage(context.process);
     if (data.op.empty() || data.op == "BUBBLE") return;
