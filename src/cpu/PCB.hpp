@@ -22,6 +22,9 @@ enum class State {
     Finished
 };
 
+
+
+
 struct MemWeights {
     uint64_t cache = 1;   // custo por acesso à memória cache
     uint64_t primary = 5; // custo por acesso à memória primária
@@ -42,6 +45,17 @@ struct PCB {
 
     // tabela de páginas, faz o mapeamento Página virtual -> Frame físico
     std::unordered_map<int, int> pageTable;
+
+
+
+    //Métricas de Tempo / escalonamento
+    uint64_t arrival_time =0; // momento em que entrou no sistema
+    uint64_t first_start_time =0; //primeira vez que foi escalonado
+    uint64_t finish_time =0; //momento em que terminou
+
+    uint64_t waiting_time = 0; //tempo total em fila Ready
+    uint64_t last_ready_in =0; //instante em que entrou em ready pela última vez
+    uint64_t cpu_time =0; //total de "ciclos de cpu" efetivamente rodando
 
     // Contadores de acesso à memória
     std::atomic<uint64_t> primary_mem_accesses{0};

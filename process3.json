@@ -2,5 +2,5 @@
   "pid": 3,
   "name": "Processo C",
   "priority": 5,
-  "program_path": "src/tasks/tasks_small.json"
+  "program_path": "src/tasks/CPUBOUND/tasks_small.json"
 }

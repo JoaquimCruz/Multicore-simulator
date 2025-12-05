@@ -3,11 +3,12 @@
 Scheduler::Scheduler(SchedulingPolicy initialPolicy, int quantum)
     : policy(initialPolicy), timeSlice(quantum) {}
 
-void Scheduler::addProcess(PCB* process) {
+void Scheduler::addProcess(PCB* process,uint64_t now) {
     std::lock_guard<std::mutex> lock(queueMutex);
     
     // Define o estado como Ready
     process->state = State::Ready;
+    process->last_ready_in =now; //entrou na fila agora
 
     // Em Round Robin e FCFS, apenas adiciona ao final
     ready_queue.push_back(process);
@@ -18,7 +19,7 @@ void Scheduler::addProcess(PCB* process) {
     }
 }
 
-PCB* Scheduler::getNextProcess() {
+PCB* Scheduler::getNextProcess(uint64_t now) {
     std::lock_guard<std::mutex> lock(queueMutex);
 
     if (ready_queue.empty()) {
@@ -27,6 +28,15 @@ PCB* Scheduler::getNextProcess() {
 
     PCB* next = ready_queue.front();
     ready_queue.pop_front();
+
+    //acumulado tempo de espera = tempo atual - instante em que entrou em ready
+    next->waiting_time += (now - next->last_ready_in);
+
+
+    //se for a primeira vez que está rodando
+    if(next-> first_start_time==0){
+        next->first_start_time = now;
+    }
     
     return next;
 }

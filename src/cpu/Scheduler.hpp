@@ -31,11 +31,11 @@ public:
     Scheduler(SchedulingPolicy initialPolicy = SchedulingPolicy::RR, int quantum = 20);
 
     // Adiciona um processo à fila (Thread-Safe)
-    void addProcess(PCB* process);
+    void addProcess(PCB* process, uint64_t now);
 
     // Retorna o próximo processo a ser executado (Thread-Safe)
     // Retorna nullptr se a fila estiver vazia
-    PCB* getNextProcess();
+    PCB* getNextProcess(uint64_t now);
 
     // Verifica se há processos prontos
     bool hasProcesses();

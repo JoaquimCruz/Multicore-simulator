@@ -20,6 +20,7 @@
 
 using json = nlohmann::json;
 
+
 /*
     O projeto já implementa o multicore com 4 cores e um quantum de 20 ciclos para cada processo. 
     Já temos o Io Worker para controlar a espera ociosa por I/O.
@@ -32,334 +33,12 @@ void* Core(MemoryManager &memoryManager, PCB &process, std::vector<std::unique_p
 const int SYSTEM_QUANTUM = 20; 
 const int NUM_CORES=4;
 
-// Função para imprimir as métricas de um processo (MANTIDA IGUAL)
-// void print_metrics(const PCB& pcb) {
-//     std::cout << "\n--- METRICAS FINAIS DO PROCESSO " << pcb.pid << " ---\n";
-//     std::cout << "Nome do Processo:       " << pcb.name << "\n";
-//     std::cout << "Estado Final:           " << (pcb.state == State::Finished ? "Finished" : "Incomplete") << "\n";
-//     std::cout << "Ciclos de Pipeline:     " << pcb.pipeline_cycles.load() << "\n";
-//     std::cout << "Total de Acessos a Mem: " << pcb.mem_accesses_total.load() << "\n";
-//     std::cout << "  - Leituras:             " << pcb.mem_reads.load() << "\n";
-//     std::cout << "  - Escritas:             " << pcb.mem_writes.load() << "\n";
-//     std::cout << "Acessos a Cache L1:     " << pcb.cache_mem_accesses.load() << "\n";
-//     std::cout << "Acessos a Mem Principal:" << pcb.primary_mem_accesses.load() << "\n";
-//     std::cout << "Acessos a Mem Secundaria:" << pcb.secondary_mem_accesses.load() << "\n";
-//     std::cout << "Ciclos Totais de MemoriA: " << pcb.memory_cycles.load() << "\n";
-//     std::cout << "------------------------------------------\n";
 
-//     std::filesystem::create_directory("output");
-//     std::ofstream resultados("output/resultados.dat", std::ios::app); // Append para não sobrescrever se houver vários
-//     std::ofstream output("output/output_" + std::to_string(pcb.pid) + ".dat"); // Arquivo separado por PID
+//relógio lógico global da simulação (em "ciclos" de CPU)
+std::atomic<uint64_t> g_sim_time{0};
 
-//     if (resultados.is_open()) {
-//         resultados << "=== Resultados de Execução (PID: " << pcb.pid << ") ===\n";
-//         resultados << "Nome: " << pcb.name << "\n";
-//         resultados << "Quantum: " << pcb.quantum << "\n";
-//         resultados << "Prioridade: " << pcb.priority << "\n";
-//         resultados << "Ciclos de Pipeline: " << pcb.pipeline_cycles << "\n";
-//         resultados << "Ciclos de Memória: " << pcb.memory_cycles << "\n";
-//         resultados << "Cache Hits: " << pcb.cache_hits << "\n";
-//         resultados << "Cache Misses: " << pcb.cache_misses << "\n";
-//         resultados << "Ciclos de IO: " << pcb.io_cycles << "\n";
-//         resultados << "--------------------------------\n";
-//     }
-
-//     if (output.is_open()) {
-//         output << "=== Saída Lógica do Programa ===\n";
-//         output << "Registradores principais:\n";
-//         output << pcb.regBank.get_registers_as_string() << "\n";
-//         output << "\n=== Operações Executadas ===\n";
-
-//         // Lê o arquivo temporário com operações
-//         std::string temp_filename = "output/temp_" + std::to_string(pcb.pid) + ".log"; // Temp específico por PID (futuro)
-//         // OBS: Atualmente seu código gera temp_1.log fixo, precisaremos mudar isso depois para multicore
-//         if (std::filesystem::exists("output/temp_1.log")) { 
-//             std::ifstream temp_file("output/temp_1.log");
-//             if (temp_file.is_open()) {
-//                 std::string line;
-//                 while (std::getline(temp_file, line)) {
-//                     output << line << "\n";
-//                 }
-//                 temp_file.close();
-//             }
-//             // Não removi ainda pois em multicore pode dar conflito, limpar no final
-//         } else {
-//             output << "(Nenhuma operação registrada)\n";
-//         }
-//         output << "\n=== Fim das Operações Registradas ===\n";
-//     }
-// }
-
-// void coreWorker(int coreId, Scheduler& scheduler, MemoryManager& memManager,IOManager& ioManager, std::vector<PCB*>& blocked_list, std::mutex& blocked_mutex,std::atomic<int>& finished_processes, int total_processes){
-    
-//     bool print_lock = true;
-//     // cada core tem seu vetor de IO request agora
-//     std::vector<std::unique_ptr<IORequest>> io_requests;
-
-
-//     while (finished_processes.load() < total_processes) {
-//         // Verifica desbloqueios de IO
-//     {
-//         // isso garante que só um core mexa por vez na lista de processos bloqueados
-//         std::lock_guard<std::mutex> lock(blocked_mutex);
-//         for (auto it = blocked_list.begin(); it != blocked_list.end(); ) {
-//             if ((*it)->state == State::Ready) { // IOManager liberou
-//                  std::cout << "[Core " << coreId << "] Processo " << (*it)->pid 
-//                               << " fim de IO -> Scheduler.\n";
-//                 scheduler.addProcess(*it); // Devolve pro Scheduler
-//                 it = blocked_list.erase(it);
-//             } else {
-//                 ++it;
-//             }
-//         }
-//     }
-
-//     PCB* current_process = scheduler.getNextProcess();
-
-//     if(current_process == nullptr){
-//         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-//         continue;
-//     }
-
-
-//     std::cout << "\n[Core " << coreId << "][Scheduler] Executando PID "
-//                   << current_process->pid << " (" << current_process->name
-//                   << ") - Quantum: " << current_process->quantum << "\n";
-
-//     current_process->state = State::Running;
-//     io_requests.clear();
-//     //todos os cores acessam a memória de forma segura
-//     Core(memManager, *current_process, &io_requests, print_lock);
-
-
-//     switch (current_process->state) {
-//             case State::Blocked:
-//                 std::cout << "[Core " << coreId << "][Scheduler] PID "
-//                           << current_process->pid << " solicitou I/O -> Bloqueado.\n";
-//                 ioManager.registerProcessWaitingForIO(current_process);
-//                 {
-//                     std::lock_guard<std::mutex> lock(blocked_mutex);
-//                     blocked_list.push_back(current_process);
-//                 }
-//                 break;
-
-//             case State::Finished:
-//                 std::cout << "[Core " << coreId << "][Scheduler] PID "
-//                           << current_process->pid << " FINALIZADO.\n";
-//                 print_metrics(*current_process);
-//                 finished_processes.fetch_add(1);
-//                 break;
-
-//             default:
-//                 if (scheduler.isPreemptive()) {
-//                     std::cout << "[Core " << coreId << "][Scheduler] PID "
-//                               << current_process->pid
-//                               << " fim de quantum (preemptivo) -> Ready Queue.\n";
-//                     current_process->state = State::Ready;
-//                     scheduler.addProcess(current_process);
-//                 } else {
-//                     std::cout << "[Core " << coreId 
-//                               << "][Scheduler] Política não preemptiva: "
-//                               << "continuando execução do PID "
-//                               << current_process->pid << "\n";
-//                     current_process->state = State::Running;
-//                     scheduler.pushFront(current_process);
-//                 }
-//                 break;
-//         }
-//     }
-
-//     std::cout << "[Core " << coreId << "] Finalizando: todos os processos já terminados.\n";
-
-
-
-// }
-
-// int main() {
-//     // 1. Inicialização dos Módulos Principais
-//     std::cout << "=== Inicializando o Simulador Multicore (Fase 1: Limpeza) ===\n";
-//     MemoryManager memManager(1024, 8192);
-//     IOManager ioManager;
-
-//     // Estruturas de Processos
-//     int policyOption = 2;
-//     SchedulingPolicy policy = SchedulingPolicy::Priority;
-//     switch (policyOption){
-//         case 0: policy = SchedulingPolicy::FCFS; break;
-//         case 1: policy = SchedulingPolicy::SJN; break;
-//         case 2: policy = SchedulingPolicy::RR; break;
-//         case 3: policy = SchedulingPolicy::Priority; break;
-
-//     }
-
-//     Scheduler scheduler(policy,SYSTEM_QUANTUM);
-//     std::vector<std::unique_ptr<PCB>> process_list; // Dono dos ponteiros
-//     std::vector<PCB*> blocked_list;                 // Fila de bloqueados
-
-//     // 2. Carregamento do Lote (BATCH)
-//     std::ifstream batchFile("batch.json");
-//     if (!batchFile.is_open()) {
-//         std::cerr << "Erro fatal: Arquivo 'batch.json' nao encontrado!\n";
-//         return 1;
-//     }
-
-//     try {
-//         json batch;
-//         batchFile >> batch;
-
-//         std::cout << "[System] Lendo lote de processos...\n";
-
-//         for (const auto& procFile : batch["processes"]) {
-//             std::string filename = procFile.get<std::string>();
-//             auto newPcb = std::make_unique<PCB>();
-
-//             std::cout << "[System] Carregando arquivo de definição: " << filename << "... ";
-            
-//             if (load_pcb_from_json(filename, *newPcb)) {
-//                 // Definição do Quantum pelo SO
-//                 newPcb->quantum = SYSTEM_QUANTUM; // pus 20, mas se quiserem só mudar para testar fecho
-
-//                 // Carrega o programa (código assembly) na memória
-//                 if (!newPcb->program_path.empty()) {
-//                     // O '0' é o endereço base físico. Com a paginação isso mudará
-//                     loadJsonProgram(newPcb->program_path, memManager, *newPcb, 0);
-//                     std::cout << "OK! (Programa: " << newPcb->program_path << ")\n";
-                    
-//                     // Adiciona ao Scheduler em vez de uma fila manual que estava
-//                     scheduler.addProcess(newPcb.get());
-//                     process_list.push_back(std::move(newPcb));
-//                 } else {
-//                     std::cout << "FALHA (program_path vazio)\n";
-//                 }
-//             } else {
-//                 std::cout << "FALHA (Erro no JSON)\n";
-//             }
-//         }
-//     } catch (const std::exception& e) {
-//         std::cerr << "Erro no parsing do batch.json: " << e.what() << "\n";
-//         return 1;
-//     }
-
-//     int total_processes = process_list.size();
-//     if (total_processes == 0) {
-//         std::cerr << "Nenhum processo carregado. Encerrando.\n";
-//         return 0;
-//     }
-
-//     std::cout << "\n[System] Total de processos prontos: " << total_processes << "\n";
-
-//     // 3. Loop Principal do Escalonador (Mantido Single-Core por enquanto)
-//     std::cout << "\nIniciando execucao com Scheduler...\n";
-    
-//     //contador atômico compartilhado
-//     std::atomic<int> finished_processes{0};
-//     //mutex para lista de bloqueados
-//     std::mutex blocked_mutex;
-
-//     //cria um vetor de threads, os núcleos
-//     std::vector<std::thread> core_threads;
-//     core_threads.reserve(NUM_CORES);
-
-
-//     std::cout << "\nIniciando execucao MULTICORE com " << NUM_CORES << " nucleos...\n";
-
-//     for (int i = 0; i < NUM_CORES; ++i) {
-//     core_threads.emplace_back(
-//         coreWorker,
-//         i,                      // coreId
-//         std::ref(scheduler),
-//         std::ref(memManager),
-//         std::ref(ioManager),
-//         std::ref(blocked_list),
-//         std::ref(blocked_mutex),
-//         std::ref(finished_processes),
-//         total_processes
-//     );
-//     }
-
-//     for (auto &t : core_threads) {
-//     if (t.joinable()) t.join();
-//     }
-
-//     std::cout << "\n=== Todos os processos finalizados. Simulador MULTICORE encerrado. ===\n";
-
-//     return 0;
-
-    
-//     /*while (finished_processes < total_processes) {
-//         // Verifica desbloqueios de IO
-//         for (auto it = blocked_list.begin(); it != blocked_list.end(); ) {
-//             if ((*it)->state == State::Ready) { // IOManager liberou
-//                 std::cout << "[SO] Processo " << (*it)->pid << " fim de IO -> Scheduler.\n";
-//                 scheduler.addProcess(*it); // Devolve pro Scheduler
-//                 it = blocked_list.erase(it);
-//             } else {
-//                 ++it;
-//             }
-//         }
-        
-
-//         PCB* current_process = scheduler.getNextProcess();
-
-//          if (current_process == nullptr) {
-
-//             if (finished_processes < total_processes) {
-//                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
-//                 continue;
-//             } else {
-//                 break;
-//             }
-//         }
-
-        
-
-//         std::cout << "\n[Scheduler] Executando PID " << current_process->pid 
-//                   << " (" << current_process->name << ") - Quantum: " << current_process->quantum << "\n";
-        
-//         current_process->state = State::Running;
-
-//         std::vector<std::unique_ptr<IORequest>> io_requests;
-//         bool print_lock = true; // Simulação de lock de print
-
-//         // Execução do core
-//         // Na Parte 4 que eu mandei para vocês, isso vai para uma Thread separada
-//         // Por enquanto, temos apenas um core rodando sequencialmente
-//         Core(memManager, *current_process, &io_requests, print_lock);
-
-//         // Avalia o resultado da execução quando o quantum acaba, decide o que fazer com ele, se for não preemptivo continua rodando
-//         switch (current_process->state) {
-//             case State::Blocked:
-//                 std::cout << "[Scheduler] PID " << current_process->pid << " solicitou I/O -> Bloqueado.\n";
-//                 ioManager.registerProcessWaitingForIO(current_process);
-//                 blocked_list.push_back(current_process);
-//                 break;
-
-//             case State::Finished:
-//                 std::cout << "[Scheduler] PID " << current_process->pid << " FINALIZADO.\n";
-//                 print_metrics(*current_process);
-//                 finished_processes++;
-//                 break;
-
-//             default:
-//                 if((scheduler.isPreemptive())) {
-//                     std::cout << "[Scheduler] PID" << current_process->pid << "fim de quantum (preemptivo) -> Ready Queue.\n";
-//                     current_process->state=State::Ready;
-//                     scheduler.addProcess(current_process);
-//                 }
-
-//                 else{
-//                     // Aqui é caso ele for não preemptivo e continua rodando até terminar
-//                     std::cout << "[Scheduler] Política não preemptiva: continuando execução do PID "<< current_process->pid << "\n";
-//                     current_process->state=State::Running;
-//                     scheduler.pushFront(current_process);
-//                 }
-//                 break;
-//         }
-//     }
-
-//     std::cout << "\n=== Todos os processos finalizados. Simulador encerrado. ===\n";
-//     return 0; */
-// }
+//tempo ocupado de cada core
+std::array<std::atomic<uint64_t>, NUM_CORES> g_core_busy{};
 
 
 // Função para imprimir as métricas de um processo 
@@ -419,6 +98,112 @@ void print_metrics(const PCB& pcb) {
     }
 }
 
+
+
+void print_system_metrics(const std::vector<std::unique_ptr<PCB>> &process_list,
+                          const std::string &policyName)
+{
+    std::cout << "\n\n===== MÉTRICAS FINAIS DO SISTEMA (" << policyName << ") =====\n";
+
+    uint64_t total_waiting = 0;
+    uint64_t total_turnaround = 0;
+    uint64_t total_cpu_time = 0;
+    uint64_t max_finish_time = 0;
+
+    int process_count = process_list.size();
+
+    // ===== PROCESSO POR PROCESSO =====
+    for (const auto &ptr : process_list) {
+        const PCB* p = ptr.get();
+
+        uint64_t turnaround = p->finish_time - p->arrival_time;
+
+        total_waiting   += p->waiting_time;
+        total_turnaround+= turnaround;
+        total_cpu_time  += p->cpu_time;
+
+        if (p->finish_time > max_finish_time)
+            max_finish_time = p->finish_time;
+
+        std::cout << "\n--- Processo PID " << p->pid << " ---\n";
+        std::cout << "Tempo de espera: " << p->waiting_time << "\n";
+        std::cout << "Turnaround:      " << turnaround << "\n";
+        std::cout << "CPU Time:        " << p->cpu_time << "\n";
+        std::cout << "Início:          " << p->first_start_time << "\n";
+        std::cout << "Fim:             " << p->finish_time << "\n";
+    }
+
+    // ===== MÉTRICAS AGREGADAS =====
+    uint64_t total_core_busy = 0;
+    for (int i = 0; i < NUM_CORES; i++)
+        total_core_busy += g_core_busy[i].load();
+
+    double avg_waiting    = (double) total_waiting    / process_count;
+    double avg_turnaround = (double) total_turnaround / process_count;
+    double cpu_util       = (double) total_core_busy  / (max_finish_time * NUM_CORES);
+    double throughput     = (double) process_count    / max_finish_time;
+    double ideal_time     = (double) total_cpu_time   / NUM_CORES;
+    double efficiency     = ideal_time / max_finish_time;
+
+    // ===== PRINT NO CONSOLE =====
+    std::cout << "\n======================================\n";
+    std::cout << "========= RESUMO DO SISTEMA ==========\n";
+    std::cout << "======================================\n\n";
+
+    std::cout << "Número de processos:      " << process_count << "\n";
+    std::cout << "Tempo total simulação:    " << max_finish_time << "\n\n";
+
+    std::cout << "Tempo médio de espera:    " << avg_waiting << "\n";
+    std::cout << "Turnaround médio:         " << avg_turnaround << "\n\n";
+
+    std::cout << "Utilização média da CPU:  " << cpu_util * 100 << "%\n";
+    std::cout << "Throughput global:        " << throughput << " processos/ciclo\n";
+    std::cout << "Eficiência:               " << efficiency * 100 << "%\n";
+
+    std::cout << "======================================\n\n";
+
+    // ===== SALVAR EM ARQUIVO =====
+    std::filesystem::create_directory("output");
+
+    std::string filename = "../output/metricas_" + policyName + ".dat";
+    std::ofstream file(filename);
+
+    if (!file.is_open()) {
+        std::cerr << "Erro ao criar arquivo de métricas: " << filename << "\n";
+        return;
+    }
+
+    // ===== CABEÇALHO DO ARQUIVO =====
+    file << "==== MÉTRICAS DA POLÍTICA " << policyName << " ====\n\n";
+    file << "Número de processos:      " << process_count << "\n";
+    file << "Tempo total simulação:    " << max_finish_time << "\n";
+    file << "Tempo médio de espera:    " << avg_waiting << "\n";
+    file << "Turnaround médio:         " << avg_turnaround << "\n";
+    file << "Utilização média da CPU:  " << cpu_util * 100 << "%\n";
+    file << "Throughput global:        " << throughput << " processos/ciclo\n";
+    file << "Eficiência:               " << efficiency * 100 << "%\n\n";
+
+    // ===== BLOCO DE PROCESSOS =====
+    file << "---- Métricas por processo ----\n";
+    for (const auto &ptr : process_list) {
+        const PCB* p = ptr.get();
+        uint64_t turnaround = p->finish_time - p->arrival_time;
+
+        file << "PID " << p->pid
+             << " | Wait=" << p->waiting_time
+             << " | Turnaround=" << turnaround
+             << " | CPU=" << p->cpu_time
+             << " | Start=" << p->first_start_time
+             << " | End=" << p->finish_time
+             << "\n";
+    }
+
+    file.close();
+
+    std::cout << "Arquivo gerado: " << filename << "\n";
+}
+
+
 /*
 
     Opa, Michel, blz?
@@ -446,7 +231,7 @@ void ioWorker(Scheduler &scheduler, std::vector<PCB*> &blocked_list,
         for (auto it = blocked_list.begin(); it != blocked_list.end(); ) {
             if ((*it)->state == State::Ready) { // IOManager liberou (mudou o estado no IOManager.cpp)
                  std::cout << "[IOM] Processo " << (*it)->pid << " fim de IO -> Scheduler.\n";
-                 scheduler.addProcess(*it); // Devolve para a fila de prontos
+                 scheduler.addProcess(*it,g_sim_time.load()); // Devolve para a fila de prontos
                  it = blocked_list.erase(it);
             } else {
                 ++it;
@@ -466,7 +251,7 @@ void coreWorker(int coreId, Scheduler& scheduler, MemoryManager& memManager,IOMa
     
     while (finished_processes.load() < total_processes || scheduler.hasProcesses()) {
     
-        PCB* current_process = scheduler.getNextProcess();
+        PCB* current_process = scheduler.getNextProcess(g_sim_time.load());
 
         if(current_process == nullptr){
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -480,8 +265,27 @@ void coreWorker(int coreId, Scheduler& scheduler, MemoryManager& memManager,IOMa
 
         current_process->state = State::Running;
         io_requests.clear();
+
+        // ===== MEDIR CICLOS ANTES DE EXECUTAR ====
+        uint64_t before = current_process->pipeline_cycles.load();
+
         
         Core(memManager, *current_process, &io_requests, print_lock);
+
+
+        // ===== MEDIR CICLOS APÓS EXECUTAR =====
+        uint64_t after = current_process->pipeline_cycles.load();
+        uint64_t used = (after > before ? after - before : 0);
+
+        // soma tempo de CPU gasto neste quantum
+        current_process->cpu_time += used;
+
+        // soma no core
+        g_core_busy[coreId] += used;
+
+        // avança o relógio global
+        g_sim_time += used;
+
 
 
         // Avalia o resultado (I/O, Finalizado ou Quantum End)
@@ -499,6 +303,9 @@ void coreWorker(int coreId, Scheduler& scheduler, MemoryManager& memManager,IOMa
             case State::Finished:
                 std::cout << "[Core " << coreId << "][Scheduler] PID "
                           << current_process->pid << " FINALIZADO.\n";
+
+                current_process->finish_time = g_sim_time.load();
+
                 print_metrics(*current_process);
                 finished_processes.fetch_add(1);
                 break;
@@ -509,7 +316,7 @@ void coreWorker(int coreId, Scheduler& scheduler, MemoryManager& memManager,IOMa
                               << current_process->pid
                               << " fim de quantum (preemptivo) -> Ready Queue.\n";
                     current_process->state = State::Ready;
-                    scheduler.addProcess(current_process);
+                    scheduler.addProcess(current_process,g_sim_time.load());
                 } else {
                     std::cout << "[Core " << coreId 
                               << "][Scheduler] Política não preemptiva: "
@@ -526,32 +333,28 @@ void coreWorker(int coreId, Scheduler& scheduler, MemoryManager& memManager,IOMa
 }
 
 
-int main() {
-    // 1. Inicialização dos Módulos Principais
+void run_simulation_with_policy(SchedulingPolicy policy, const std::string &policyName)
+{
+    // ====== INÍCIO DO SEU MAIN (copiado exatamente) ======
+
     std::cout << "=== Inicializando o Simulador Multicore (Fase 1: Limpeza) ===\n";
+
+    // reset de variáveis globais
+    g_sim_time.store(0);
+    for (int i = 0; i < NUM_CORES; ++i) g_core_busy[i].store(0);
+
     MemoryManager memManager(192, 8192);
     IOManager ioManager;
 
-    // Estruturas de Processos
-    int policyOption = 2; // Exemplo: Round-Robin
-    SchedulingPolicy policy = SchedulingPolicy::RR;
-    switch (policyOption){
-        case 0: policy = SchedulingPolicy::FCFS; break;
-        case 1: policy = SchedulingPolicy::SJN; break;
-        case 2: policy = SchedulingPolicy::RR; break;
-        case 3: policy = SchedulingPolicy::Priority; break;
+    Scheduler scheduler(policy, SYSTEM_QUANTUM);
+    std::vector<std::unique_ptr<PCB>> process_list;
+    std::vector<PCB*> blocked_list;
 
-    }
-
-    Scheduler scheduler(policy,SYSTEM_QUANTUM);
-    std::vector<std::unique_ptr<PCB>> process_list; // Dono dos ponteiros
-    std::vector<PCB*> blocked_list;                 // Fila de bloqueados
-
-    // 2. Carregamento do Lote (BATCH)
+    // ======= Carregamento do BATCH =======
     std::ifstream batchFile("batch.json");
     if (!batchFile.is_open()) {
         std::cerr << "Erro fatal: Arquivo 'batch.json' nao encontrado!\n";
-        return 1;
+        return;
     }
 
     try {
@@ -565,62 +368,64 @@ int main() {
             auto newPcb = std::make_unique<PCB>();
 
             std::cout << "[System] Carregando arquivo de definição: " << filename << "... ";
-            
+        
             if (load_pcb_from_json(filename, *newPcb)) {
-                // Definição do Quantum pelo SO
+                
                 newPcb->quantum = SYSTEM_QUANTUM;
+                newPcb->arrival_time = 0;
+                newPcb->last_ready_in = 0;
 
-                // Carrega o programa (código assembly) na memória
                 if (!newPcb->program_path.empty()) {
+                    
                     loadJsonProgram(newPcb->program_path, memManager, *newPcb, 0);
                     std::cout << "OK! (Programa: " << newPcb->program_path << ")\n";
-                    
-                    scheduler.addProcess(newPcb.get());
+
+                    scheduler.addProcess(newPcb.get(), g_sim_time.load());
                     process_list.push_back(std::move(newPcb));
-                } else {
+                }
+                else {
                     std::cout << "FALHA (program_path vazio)\n";
                 }
-            } else {
+            }
+            else {
                 std::cout << "FALHA (Erro no JSON)\n";
             }
         }
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e) {
         std::cerr << "Erro no parsing do batch.json: " << e.what() << "\n";
-        return 1;
+        return;
     }
 
     int total_processes = process_list.size();
     if (total_processes == 0) {
         std::cerr << "Nenhum processo carregado. Encerrando.\n";
-        return 0;
+        return;
     }
 
     std::cout << "\n[System] Total de processos prontos: " << total_processes << "\n";
 
-    // 3. Execução MULTICORE
+    // ======== Execução MULTICORE ========
     std::cout << "\nIniciando execucao MULTICORE com " << NUM_CORES << " nucleos...\n";
-    
-    // contador atômico compartilhado
+
     std::atomic<int> finished_processes{0};
-    // mutex para lista de bloqueados
     std::mutex blocked_mutex;
     std::vector<std::thread> core_threads;
     core_threads.reserve(NUM_CORES);
 
-    // 1. Inicia a thread dedicada para IO (DESBLOQUEIO)
-    std::thread io_thread(ioWorker, 
-                          std::ref(scheduler), 
-                          std::ref(blocked_list), 
-                          std::ref(blocked_mutex), 
-                          std::ref(finished_processes), 
+    // Thread de IO
+    std::thread io_thread(ioWorker,
+                          std::ref(scheduler),
+                          std::ref(blocked_list),
+                          std::ref(blocked_mutex),
+                          std::ref(finished_processes),
                           total_processes);
 
-
-    // 2. Inicia as threads dos cores
+    // Threads dos núcleos
     for (int i = 0; i < NUM_CORES; ++i) {
         core_threads.emplace_back(
             coreWorker,
-            i,                      // coreId
+            i,
             std::ref(scheduler),
             std::ref(memManager),
             std::ref(ioManager),
@@ -631,18 +436,76 @@ int main() {
         );
     }
 
-    // 3. Espera por todas as threads
-    for (auto &t : core_threads) {
+    // Esperar cores
+    for (auto &t : core_threads)
         if (t.joinable()) t.join();
-    }
-    
-    //Espera pela thread de IO para garantir que todos os processos se completem
-    if (io_thread.joinable()) {
+
+    // Esperar IO
+    if (io_thread.joinable())
         io_thread.join();
+
+    std::cout << "\n=== Todos os processos finalizados. Politica "
+              << policyName << " encerrada. ===\n";
+
+    // ======= CHAMA SUAS MÉTRICAS =======
+    print_system_metrics(process_list, policyName);
+}
+
+
+
+int main() {
+
+    while (true) {
+
+        std::cout << "\n=== MENU DO ESCALONADOR MULTICORE ===\n";
+        std::cout << "Escolha a politica de escalonamento:\n";
+        std::cout << "0 - FCFS\n";
+        std::cout << "1 - SJN\n";
+        std::cout << "2 - Round Robin\n";
+        std::cout << "3 - Priority\n";
+        std::cout << "9 - Sair\n";
+        std::cout << "Opcao: ";
+
+        int opcao;
+        std::cin >> opcao;
+
+        if (opcao == 9) {
+            std::cout << "Encerrando simulador.\n";
+            return 0;
+        }
+
+        switch (opcao) {
+            case 0:
+                run_simulation_with_policy(SchedulingPolicy::FCFS, "FCFS");
+                break;
+
+            case 1:
+                run_simulation_with_policy(SchedulingPolicy::SJN, "SJN");
+                break;
+
+            case 2:
+                run_simulation_with_policy(SchedulingPolicy::RR, "RR");
+                break;
+
+            case 3:
+                run_simulation_with_policy(SchedulingPolicy::Priority, "PRIORITY");
+                break;
+
+            default:
+                std::cout << "Opcao invalida! Tente novamente.\n";
+                continue;
+        }
+
+        std::cout << "\nDeseja testar outra politica? (1 = sim, 0 = sair): ";
+        int again;
+        std::cin >> again;
+
+        if (again == 0) {
+            std::cout << "Saindo.\n";
+            return 0;
+        }
     }
-
-
-    std::cout << "\n=== Todos os processos finalizados. Simulador MULTICORE encerrado. ===\n";
 
     return 0;
 }
+
