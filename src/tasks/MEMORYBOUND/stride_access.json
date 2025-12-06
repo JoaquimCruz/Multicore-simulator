@@ -1,0 +1,12 @@
+{
+  "metadata": { "task_id": "mem_stride", "description": "Acessa endereços distantes para forçar Cache Miss" },
+  "data": { "arr": [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] },
+  "program": [
+    { "instruction": "lw", "rt": "$t0", "offset": 0, "base": "arr" },
+    { "instruction": "lw", "rt": "$t1", "offset": 16, "base": "arr" }, 
+    { "instruction": "lw", "rt": "$t2", "offset": 32, "base": "arr" },
+    { "instruction": "lw", "rt": "$t3", "offset": 48, "base": "arr" },
+    { "instruction": "add", "rd": "$t4", "rs": "$t0", "rt": "$t3" },
+    { "instruction": "end" }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "metadata": { "task_id": "io_burst", "description": "Faz varias impressoes seguidas" },
+  "data": { "a": 100, "b": 200, "c": 300 },
+  "program": [
+    { "instruction": "lw", "rt": "$t0", "offset": 0, "base": "a" },
+    { "instruction": "print", "rt": "$t0" },
+    { "instruction": "lw", "rt": "$t1", "offset": 0, "base": "b" },
+    { "instruction": "print", "rt": "$t1" },
+    { "instruction": "lw", "rt": "$t2", "offset": 0, "base": "c" },
+    { "instruction": "print", "rt": "$t2" },
+    { "instruction": "end" }
+  ]
+}

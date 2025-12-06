@@ -33,7 +33,7 @@ void Control_Unit::log_operation(const std::string &msg, int pid) {
     
     // Usa o PID real para criar um arquivo de log único por processo
     std::ostringstream oss;
-    oss << "output/temp_" << pid << ".log"; 
+    oss << "output/trace_logs/temp_" << pid << ".log"; 
 
     std::ofstream fout(oss.str(), std::ios::app);
     if (fout.is_open()) {
@@ -137,6 +137,14 @@ void Control_Unit::Fetch(ControlContext &context) {
     uint32_t instr = context.memManager.read(context.registers.mar.read(), context.process);
     context.registers.ir.write(instr);
 
+    if (instr == 0 && context.registers.pc.value > 10000) {
+        std::cerr << "[CPU] ERRO FATAL: PC desviou para área vazia (" 
+                  << context.registers.pc.value << "). Encerrando PID " 
+                  << context.process.pid << "\n";
+        context.endProgram = true; // Força o fim do processo
+        return;
+    }
+    
     const uint32_t END_SENTINEL = 0b11111100000000000000000000000000u;
     if (instr == END_SENTINEL) {
         context.endProgram = true;

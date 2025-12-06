@@ -1,0 +1,6 @@
+{ 
+    "pid": 8, 
+    "name": "IO PingPong", 
+    "priority": 6, 
+    "program_path": "src/tasks/IOBOUND/ping_pong_task.json" 
+}

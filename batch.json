@@ -1,10 +1,17 @@
 {
   "processes": [
-    "process1.json",
-    "process2.json",
-    "process3.json",
-    "process4.json",
-    "process5.json",
-    "process6.json"
+    "processos/process1.json",
+    "processos/cpu_bound/process2.json",
+    "processos/cpu_bound/process3.json",
+    "processos/cpu_bound/process4.json",
+    "processos/io_bound/process5.json",
+    "processos/cpu_bound/process6.json",
+    "processos/io_bound/proc_io_1.json",
+    "processos/io_bound/proc_io_2.json",
+    "processos/io_bound/proc_io_3.json",
+    "processos/memory_bound/proc_mem_1.json",
+    "processos/memory_bound/proc_mem_2.json",
+    "processos/memory_bound/proc_mem_3.json",
+    "processos/memory_bound/proc_mem_4.json"
   ]
 }

@@ -56,22 +56,19 @@ add_executable(test_metrics
 target_link_libraries(test_metrics PRIVATE pthread)
 
 # --- COPIAR ARQUIVOS NECESSÁRIOS PARA A PASTA BUILD ---
-# Garante que os arquivos .json e a pasta de tasks estejam junto do executável
 
-# 1. Copia os arquivos de configuração de processos e lote
+# 1. Copia o batch.json para a raiz do build
 file(COPY ${CMAKE_SOURCE_DIR}/batch.json DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY ${CMAKE_SOURCE_DIR}/process1.json DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY ${CMAKE_SOURCE_DIR}/process2.json DESTINATION ${CMAKE_BINARY_DIR}) 
-file(COPY ${CMAKE_SOURCE_DIR}/process3.json DESTINATION ${CMAKE_BINARY_DIR}) 
-file(COPY ${CMAKE_SOURCE_DIR}/process4.json DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY ${CMAKE_SOURCE_DIR}/process5.json DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY ${CMAKE_SOURCE_DIR}/process6.json DESTINATION ${CMAKE_BINARY_DIR})
 
-# 2. Cria a estrutura da pasta 'src/tasks' dentro do build
+# 2. Copia a PASTA 'processos' inteira
+# Isso cria 'build/processos/cpu_bound/...', mantendo a estrutura que o batch.json exige
+file(COPY ${CMAKE_SOURCE_DIR}/processos DESTINATION ${CMAKE_BINARY_DIR})
+
+# 3. Cria a estrutura da pasta 'src/tasks' dentro do build (caso precise acessar localmente)
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/src)
 file(COPY ${CMAKE_SOURCE_DIR}/src/tasks DESTINATION ${CMAKE_BINARY_DIR}/src)
 
-# 3. Garante que a pasta output exista para os logs
+# 4. Garante que a pasta output exista para os logs
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
 # --- CUSTOM TARGETS (RUN, CHECK, AJUDA) ---

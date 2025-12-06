@@ -1,0 +1,13 @@
+{
+  "metadata": { "task_id": "mem_copy", "description": "Leitura e Escrita intensa" },
+  "data": { "src": [10,20,30,40], "dest": [0,0,0,0] },
+  "program": [
+    { "instruction": "lw", "rt": "$t0", "offset": 0, "base": "src" },
+    { "instruction": "sw", "rt": "$t0", "offset": 0, "base": "dest" },
+    { "instruction": "lw", "rt": "$t1", "offset": 4, "base": "src" },
+    { "instruction": "sw", "rt": "$t1", "offset": 4, "base": "dest" },
+    { "instruction": "lw", "rt": "$t2", "offset": 8, "base": "src" },
+    { "instruction": "sw", "rt": "$t2", "offset": 8, "base": "dest" },
+    { "instruction": "end" }
+  ]
+}

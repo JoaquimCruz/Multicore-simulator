@@ -148,7 +148,9 @@ uint32_t encodeIType(const json &j, int pcIdx, int startAddr){
             rs = getRegisterCode("$zero");
             const string lbl = j.at("base").get<string>();
             if (!dataMap.count(lbl)) throw runtime_error("Label de dados desconhecida: " + lbl);
-            imm = static_cast<int16_t>(dataMap[lbl] & 0xFFFF);
+            int baseAddr = dataMap[lbl];
+            int offset = j.contains("offset") ? parseImmediate(j.at("offset")) : 0;
+            imm = static_cast<int16_t>((baseAddr + offset) & 0xFFFF);
         } else {
             throw runtime_error("lw/sw precisam de 'addr' ou 'baseReg' ou 'base'");
         }

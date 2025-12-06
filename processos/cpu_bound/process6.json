@@ -2,5 +2,5 @@
   "pid": 6,
   "name": "Processo Misto",
   "priority": 2,
-  "program_path": "src/tasks/CPUBOUND/medium_task.json"
+  "program_path": "../src/tasks/CPUBOUND/medium_task.json"
 }
