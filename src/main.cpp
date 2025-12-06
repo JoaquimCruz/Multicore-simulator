@@ -60,7 +60,7 @@ void print_metrics(const PCB& pcb) {
         resultados << "Ciclos de Memória: " << pcb.memory_cycles << "\n";
         resultados << "Cache Hits: " << pcb.cache_hits << "\n";
         resultados << "Cache Misses: " << pcb.cache_misses << "\n";
-        resultados << "Ciclos de IO: " << pcb.io_cycles << "\n";
+       // resultados << "Ciclos de IO: " << pcb.io_cycles << "\n";
         resultados << "--------------------------------\n";
     }
 
