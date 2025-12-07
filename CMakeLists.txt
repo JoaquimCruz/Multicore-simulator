@@ -55,7 +55,6 @@ add_executable(test_metrics
 )
 target_link_libraries(test_metrics PRIVATE pthread)
 
-# --- COPIAR ARQUIVOS NECESSÁRIOS PARA A PASTA BUILD ---
 
 # 1. Copia o batch.json para a raiz do build
 file(COPY ${CMAKE_SOURCE_DIR}/batch.json DESTINATION ${CMAKE_BINARY_DIR})
@@ -71,7 +70,7 @@ file(COPY ${CMAKE_SOURCE_DIR}/src/tasks DESTINATION ${CMAKE_BINARY_DIR}/src)
 # 4. Garante que a pasta output exista para os logs
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
-# --- CUSTOM TARGETS (RUN, CHECK, AJUDA) ---
+
 
 # Alvo para executar o simulador
 add_custom_target(run
