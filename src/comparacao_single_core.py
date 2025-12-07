@@ -83,7 +83,7 @@ def plot_speedup():
     ax = sns.barplot(x=algoritmos, y=speedup, palette=color_speedup, hue=algoritmos, legend=False)
     
     # Linha de Amdahl (Teórico)
-    plt.axhline(y=3.8, color='#c0392b', linestyle='--', linewidth=2.5, label='Speedup Teórico (Amdahl): 3.8x')
+    plt.axhline(y=1.9, color='#c0392b', linestyle='--', linewidth=2.5, label='Speedup Teórico (Amdahl): 1.9x')
     
     # Linha de Base (1x - Sem ganho)
     plt.axhline(y=1.0, color='black', linestyle='-', linewidth=1)
