@@ -75,56 +75,29 @@ df_avg_process = df_process.groupby('Algoritmo').agg(
 df_final = pd.merge(df_global, df_avg_process, on='Algoritmo')
 
 
-def generate_pie_chart_all(data, col_value, title, filename):
-    """Gera um gráfico de pizza para a métrica usando cores neutras."""
-    
-    plt.style.use('default')
-    sns.set_context("paper", font_scale=1.2)
-    
-    # 1. Preparação dos dados e labels
-    labels = data['Algoritmo']
-    sizes = data[col_value]
-    total_sum = sizes.sum()
-    
-    # 2. Paleta de cores (NEUTRA: Pastel1)
-    palette_colors = sns.color_palette("Pastel1", n_colors=len(data))
-    
-    plt.figure(figsize=(9, 9))
-    
-    # Adiciona nota para métricas "Menor é Melhor"
-    is_lower_better = col_value in ['Media_Wait', 'Media_Turnaround']
-    
-    if is_lower_better:
-        title += " (Menor Fatia = Melhor Performance)"
-    
-    # Formato de porcentagem e valor absoluto
-    def autopct_format(pct):
-        val = (pct * total_sum) / 100.0
-        return f'{pct:.1f}%\n({val:.4f})'
-        
-    # 3. Criação do gráfico de pizza
-    wedges, texts, autotexts = plt.pie(
-        sizes, 
-        colors=palette_colors,
-        autopct=autopct_format,
-        labels=labels, 
-        startangle=90, 
-        wedgeprops={"edgecolor": "black", 'linewidth': 1.5, 'antialiased': True},
-        textprops={'fontsize': 10, 'weight': 'bold'}
+def generate_plot(data, y_col, title, filename, ascending=False):
+    """Função auxiliar para gerar gráficos de barras e salvar no diretório correto."""
+    plt.figure(figsize=(9, 5))
+    sns.barplot(
+        x='Algoritmo', 
+        y=y_col, 
+        data=data.sort_values(by=y_col, ascending=ascending), 
+        palette='coolwarm'
     )
-    
-
-    plt.title(title, fontsize=14, fontweight='bold', pad=20)
+    plt.title(title, fontsize=14)
+    plt.ylabel(y_col, fontsize=12)
+    plt.xlabel('Algoritmo', fontsize=12)
+    plt.grid(axis='y', linestyle='--')
     plt.tight_layout()
-    plt.savefig(os.path.join(OUTPUT_DIR, filename), dpi=400)
+
+    plt.savefig(os.path.join(OUTPUT_DIR, filename))
     plt.close()
 
-
-
-generate_pie_chart_all(df_final, 'Throughput', 'Contribuição Relativa do Throughput por Algoritmo', 'fig_throughput.png')
-generate_pie_chart_all(df_final, 'Utilização Média CPU (%)', 'Contribuição Relativa da Utilização Média da CPU', 'fig_cpu_util.png')
-generate_pie_chart_all(df_final, 'Media_Wait', 'Contribuição Relativa do Tempo de Espera Médio', 'fig_wait_time.png')
-generate_pie_chart_all(df_final, 'Media_Turnaround', 'Contribuição Relativa do Tempo de Turnaround Médio', 'fig_turnaround_time.png')
+sns.set_style("whitegrid")
+generate_plot(df_final, 'Throughput', 'Throughput Global por Algoritmo', 'comparacao_throughput.png', ascending=False)
+generate_plot(df_final, 'Utilização Média CPU (%)', 'Utilização Média da CPU', 'comparacao_utilizacao_cpu.png', ascending=False)
+generate_plot(df_final, 'Media_Wait', 'Tempo de Espera Médio', 'comparacao_wait_time.png', ascending=True)
+generate_plot(df_final, 'Media_Turnaround', 'Tempo de Turnaround Médio', 'comparacao_turnaround_time.png', ascending=True)
 
 df_final.to_csv(os.path.join(OUTPUT_DIR, 'metricas_consolidadas_final.csv'), index=False)
 
