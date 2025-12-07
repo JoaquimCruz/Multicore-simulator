@@ -170,7 +170,6 @@ Este arquivo contém as instruções Assembly MIPS simuladas e a seção de dado
     "processos/process1.json",
     "processos/cpu_bound/process2.json",
     "processos/cpu_bound/process3.json",
-    "processos/cpu_bound/process4.json",
     "processos/io_bound/process5.json",
     "processos/cpu_bound/process6.json",
     "processos/io_bound/proc_io_1.json",
@@ -179,7 +178,6 @@ Este arquivo contém as instruções Assembly MIPS simuladas e a seção de dado
     "processos/memory_bound/proc_mem_1.json",
     "processos/memory_bound/proc_mem_2.json",
     "processos/memory_bound/proc_mem_3.json",
-    "processos/memory_bound/proc_mem_4.json"
     -> COLOQUE AQUI O SEU NOVO PROCESSO
   ]
 }
