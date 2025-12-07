@@ -192,7 +192,7 @@ Este arquivo contém as instruções Assembly MIPS simuladas e a seção de dado
 - `CMake` (versão 3.10 ou superior);
 - `Make`.
 
-### Compilação e execução
+### Compilação e execução (Linux/WSL)
 
 1. Clone o repositório e navegue para a pasta raiz do projeto.
 
