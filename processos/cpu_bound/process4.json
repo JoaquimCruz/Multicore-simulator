@@ -1,6 +1,0 @@
-{
-  "pid": 4,
-  "name": "Processo CPU Bound",
-  "priority": 9,
-  "program_path": "../src/tasks/CPUBOUND/long_task.json"
-}

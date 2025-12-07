@@ -1,6 +1,0 @@
-{ 
-    "pid": 13, 
-    "name": "Mem Matrix", 
-    "priority": 7, 
-    "program_path": "src/tasks/MEMORYBOUND/matrix_sim.json" 
-}

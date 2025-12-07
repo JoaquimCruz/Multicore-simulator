@@ -8,9 +8,9 @@ import os
 algoritmos = ['SJN', 'Priority', 'FCFS', 'Round Robin']
 
 
-tempo_single = [626, 639, 639, 639] 
+tempo_single = [298, 314, 314, 314] 
 
-tempo_multi  = [202, 309, 309, 330]
+tempo_multi  = [193, 194, 164, 180]
 
 # Throughput (Processos/Ciclo) - Calculado: 13 processos / Tempo
 throughput_single = [13/t for t in tempo_single]
