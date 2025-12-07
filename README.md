@@ -204,16 +204,20 @@ $ cd Multicore-simulator
 
 2. Crie o diretório build e compile o projeto
 
-```` BASH  
-mkdir build
+```` BASH
+# Na raiz do projeto  
 cd build
+
+# Para remover todo o conteúdo da pasta build
+rm -rf * 
 cmake ..
 make
 ````
 
 3. Execute o simulador: 
 
-```` BASH  
+```` BASH
+# Dentro da pasta build
 # Recomendado: Via Make (garante cópia atualizada dos JSONs)
 make run
 ````
