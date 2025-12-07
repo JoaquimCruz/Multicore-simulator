@@ -1,0 +1,54 @@
+=== Saída Lógica do Programa ===
+Registradores principais:
+========================================
+====== Estado do Banco de Registradores ======
+========================================
+pc    : 0x1c000000  (Decimal: 28)
+ir    : 0xfc000000  (Decimal: -67108864)
+mar   : 0x1c000000  (Decimal: 28)
+sr    : 0x00000000  (Decimal: 0)
+hi    : 0x00000000  (Decimal: 0)
+lo    : 0x00000000  (Decimal: 0)
+----------------------------------------
+zero  : 0x00000000  (Decimal: 0)
+at    : 0x00000000  (Decimal: 0)
+v0    : 0x00000000  (Decimal: 0)
+v1    : 0x00000000  (Decimal: 0)
+a0    : 0x00000000  (Decimal: 0)
+a1    : 0x00000000  (Decimal: 0)
+a2    : 0x00000000  (Decimal: 0)
+a3    : 0x00000000  (Decimal: 0)
+----------------------------------------
+t0    : 0x00000000  (Decimal: 0)
+t1    : 0x00000000  (Decimal: 0)
+t2    : 0x00000000  (Decimal: 0)
+t3    : 0x00000000  (Decimal: 0)
+t4    : 0x00000000  (Decimal: 0)
+t5    : 0x00000000  (Decimal: 0)
+t6    : 0x00000000  (Decimal: 0)
+t7    : 0x00000000  (Decimal: 0)
+t8    : 0x00000000  (Decimal: 0)
+t9    : 0x00000000  (Decimal: 0)
+----------------------------------------
+s0    : 0xa0000000  (Decimal: 10)
+s1    : 0x14000000  (Decimal: 20)
+s2    : 0x1e000000  (Decimal: 30)
+s3    : 0x00000000  (Decimal: 0)
+s4    : 0x00000000  (Decimal: 0)
+s5    : 0x00000000  (Decimal: 0)
+s6    : 0x00000000  (Decimal: 0)
+s7    : 0x00000000  (Decimal: 0)
+----------------------------------------
+gp    : 0x00000000  (Decimal: 0)
+sp    : 0x00000000  (Decimal: 0)
+fp    : 0x00000000  (Decimal: 0)
+ra    : 0x00000000  (Decimal: 0)
+k0    : 0x00000000  (Decimal: 0)
+k1    : 0x00000000  (Decimal: 0)
+========================================
+
+
+=== Operações Executadas ===
+[ARIT] ADD s2 = s0(10) ADD s1(20) = 30 [PID:3]
+
+=== Fim das Operações Registradas ===

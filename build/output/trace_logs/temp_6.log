@@ -1,0 +1,2 @@
+[ARIT] SUB s2 = s0(15) SUB s1(10) = 5 [PID:6]
+[ARIT] MULT s2 = s2(5) MULT s2(5) = 25 [PID:6]

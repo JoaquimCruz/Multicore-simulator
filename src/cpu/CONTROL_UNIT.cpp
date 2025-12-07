@@ -18,14 +18,6 @@ static std::mutex log_mutex;
 using namespace std;
 
 
-// void Control_Unit::log_operation(const std::string &msg) {
-//     std::lock_guard<std::mutex> lock(log_mutex);
-//     static int temp_file_id = 1; 
-//     std::ostringstream oss;
-//     oss << "output/temp_" << temp_file_id << ".log";
-//     std::ofstream fout(oss.str(), std::ios::app);
-//     if (fout.is_open()) fout << msg << "\n";
-// }
 
 //Implementação thread-safe de log_operation (Recebe e usa o PID)
 void Control_Unit::log_operation(const std::string &msg, int pid) {
@@ -244,58 +236,6 @@ void Control_Unit::Decode(hw::REGISTER_BANK &registers, Instruction_Data &data) 
     }
 }
 
-// ... (Execute_Immediate_Operation e Execute_Aritmetic_Operation IGUAIS) ...
-// void Control_Unit::Execute_Immediate_Operation(ControlContext &context, Instruction_Data &data) {
-//     if (data.op.empty() || data.op == "BUBBLE") return;
-//     std::string name_rs = this->map.getRegisterName(binaryStringToUint(data.source_register));
-//     std::string name_rt = this->map.getRegisterName(binaryStringToUint(data.target_register));
-//     int32_t val_rs = registers.readRegister(name_rs);
-//     int32_t imm = data.immediate; 
-//     std::ostringstream ss;
-//     if (data.op == "ADDI" || data.op == "ADDIU") {
-//         ALU alu; alu.A = val_rs; alu.B = imm; alu.op = ADD; alu.calculate();
-//         registers.writeRegister(name_rt, alu.result);
-//         ss << "[IMM] " << data.op << " " << name_rt << " = " << name_rs << "(" << val_rs << ") + " << imm << " -> " << alu.result;
-//         log_operation(ss.str(), context.process.pid); return;
-//     }
-//     if (data.op == "SLTI") {
-//         int32_t res = (val_rs < imm) ? 1 : 0; registers.writeRegister(name_rt, res);
-//         ss << "[IMM] SLTI " << name_rt << " = (" << name_rs << "(" << val_rs << ") < " << imm << ") ? 1 : 0 -> " << res;
-//         log_operation(ss.str(), context.process.pid); return;
-//     }
-//     if (data.op == "LUI") {
-//         uint32_t uimm = static_cast<uint32_t>(static_cast<uint16_t>(imm));
-//         int32_t val = static_cast<int32_t>(uimm << 16); registers.writeRegister(name_rt, val);
-//         ss << "[IMM] LUI " << name_rt << " = (0x" << std::hex << imm << " << 16) -> 0x" << val << std::dec;
-//         log_operation(ss.str(), context.process.pid); return;
-//     }
-//     if (data.op == "LI") {
-//         registers.writeRegister(name_rt, imm);
-//         ss << "[IMM] LI " << name_rt << " = " << imm;
-//         log_operation(ss.str(), context.process.pid); return;
-//     }
-// }
-
-// void Control_Unit::Execute_Aritmetic_Operation(hw::REGISTER_BANK &registers, Instruction_Data &data) {
-//     if (data.op.empty() || data.op == "BUBBLE") return;
-//     std::string name_rs = this->map.getRegisterName(binaryStringToUint(data.source_register));
-//     std::string name_rt = this->map.getRegisterName(binaryStringToUint(data.target_register));
-//     std::string name_rd = this->map.getRegisterName(binaryStringToUint(data.destination_register));
-//     int32_t val_rs = registers.readRegister(name_rs);
-//     int32_t val_rt = registers.readRegister(name_rt);
-//     ALU alu; alu.A = val_rs; alu.B = val_rt;
-//     if (data.op == "ADD") alu.op = ADD;
-//     else if (data.op == "SUB") alu.op = SUB;
-//     else if (data.op == "MULT") alu.op = MUL;
-//     else if (data.op == "DIV") alu.op = DIV;
-//     else return;
-//     alu.calculate(); registers.writeRegister(name_rd, alu.result);
-//     std::ostringstream ss;
-//     ss << "[ARIT] " << data.op << " " << name_rd << " = " << name_rs << "(" << val_rs << ") " << data.op << " " << name_rt << "(" << val_rt << ") = " << alu.result;
-//     log_operation(ss.str());
-// }
-
-
 
 void Control_Unit::Execute_Immediate_Operation(ControlContext &context, Instruction_Data &data) {
     if (data.op.empty() || data.op == "BUBBLE") return;
@@ -401,21 +341,7 @@ void Control_Unit::Execute_Loop_Operation(hw::REGISTER_BANK &registers, Instruct
     }
 }
 
-// void Control_Unit::Execute(Instruction_Data &data, ControlContext &context) {
-//     account_stage(context.process);
-//     if (data.op.empty() || data.op == "BUBBLE") return;
 
-//     if (data.op == "ADDI" || data.op == "ADDIU" || data.op == "SLTI" || data.op == "LUI" || data.op == "LI") {
-//         Execute_Immediate_Operation(context.registers, data); return;
-//     }
-//     if (data.op == "ADD" || data.op == "SUB" || data.op == "MULT" || data.op == "DIV") {
-//         Execute_Aritmetic_Operation(context.registers, data); return;
-//     } else if (data.op == "BEQ" || data.op == "J" || data.op == "BNE" || data.op == "BGT" || data.op == "BGTI" || data.op == "BLT" || data.op == "BLTI") {
-//         Execute_Loop_Operation(context.registers, data, context.counter, context.counterForEnd, context.endProgram, context.memManager, context.process); return;
-//     } else if (data.op == "PRINT") {
-//         Execute_Operation(data, context); return;
-//     }
-// }
 
 //Atualizar chamadas para passar o ControlContext
 void Control_Unit::Execute(Instruction_Data &data, ControlContext &context) {

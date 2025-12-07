@@ -1,0 +1,19 @@
+{
+  "metadata": {
+    "task_id": "prog_small",
+    "author": "grupoPeripherals",
+    "description": "Programa pequeno para testar escalonamento"
+  },
+  "data": {
+    "x": 10,
+    "y": 20,
+    "z": 0
+  },
+  "program": [
+    { "label": "start", "instruction": "lw", "rt": "$s0", "offset": 0, "base": "x" },
+    { "instruction": "lw", "rt": "$s1", "offset": 0, "base": "y" },
+    { "instruction": "add", "rd": "$s2", "rs": "$s0", "rt": "$s1" },
+    { "instruction": "sw", "rt": "$s2", "offset": 0, "base": "z" },
+    { "label": "end", "instruction": "end" }
+  ]
+}

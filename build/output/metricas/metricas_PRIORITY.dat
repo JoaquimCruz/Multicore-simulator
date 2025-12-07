@@ -1,0 +1,18 @@
+==== MÉTRICAS DA POLÍTICA PRIORITY ====
+
+Tempo total simulação:    194
+Utilização média da CPU:  40.4639%
+Throughput global:        0.056701
+
+---- Métricas por processo ----
+PID 1 | Wait=29 | Turnaround=194 | CPU=164
+PID 2 | Wait=0 | Turnaround=13 | CPU=13
+PID 3 | Wait=0 | Turnaround=13 | CPU=13
+PID 5 | Wait=0 | Turnaround=24 | CPU=24
+PID 6 | Wait=24 | Turnaround=43 | CPU=18
+PID 7 | Wait=12 | Turnaround=25 | CPU=12
+PID 8 | Wait=0 | Turnaround=16 | CPU=16
+PID 9 | Wait=12 | Turnaround=24 | CPU=11
+PID 10 | Wait=15 | Turnaround=30 | CPU=14
+PID 11 | Wait=23 | Turnaround=41 | CPU=17
+PID 12 | Wait=23 | Turnaround=36 | CPU=12

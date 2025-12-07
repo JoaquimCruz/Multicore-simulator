@@ -1,0 +1,6 @@
+{ 
+    "pid": 12, 
+    "name": "Mem Stride", 
+    "priority": 2, 
+    "program_path": "src/tasks/MEMORYBOUND/stride_access.json" 
+}

@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/test_ula.dir/src/test/teste_alu.cpp.o CMakeFiles/test_ula.dir/src/cpu/ULA.cpp.o -o test_ula 

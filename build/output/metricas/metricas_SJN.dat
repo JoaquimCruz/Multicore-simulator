@@ -1,0 +1,18 @@
+==== MÉTRICAS DA POLÍTICA SJN ====
+
+Tempo total simulação:    190
+Utilização média da CPU:  39.2105%
+Throughput global:        0.0578947
+
+---- Métricas por processo ----
+PID 1 | Wait=25 | Turnaround=190 | CPU=164
+PID 2 | Wait=0 | Turnaround=13 | CPU=13
+PID 3 | Wait=0 | Turnaround=13 | CPU=13
+PID 5 | Wait=28 | Turnaround=37 | CPU=8
+PID 6 | Wait=12 | Turnaround=31 | CPU=18
+PID 7 | Wait=0 | Turnaround=12 | CPU=12
+PID 8 | Wait=23 | Turnaround=40 | CPU=16
+PID 9 | Wait=12 | Turnaround=24 | CPU=11
+PID 10 | Wait=11 | Turnaround=26 | CPU=14
+PID 11 | Wait=11 | Turnaround=29 | CPU=17
+PID 12 | Wait=0 | Turnaround=12 | CPU=12

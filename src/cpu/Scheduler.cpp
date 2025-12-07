@@ -65,11 +65,6 @@ void Scheduler::sortQueue() {
             });
     } 
     else if (policy == SchedulingPolicy::SJN) {
-        // Shortest Job Next: Ordena por tamanho do programa (aprox.)
-        // Usamos mem_writes/reads como estimativa ou o PC final se soubessemos
-        // Por enquanto, vamos ordenar por quem tem menos ciclos executados (simplificação)
-        // Ou pelo tamanho do tasks.json se tivéssemos essa métrica fácil.
-        // Vamos manter a ordem de prioridade como placeholder para SJN por enquanto.
         std::sort(ready_queue.begin(), ready_queue.end(), 
             [](PCB* a, PCB* b) {
                 return a->burst_time < b->burst_time; 

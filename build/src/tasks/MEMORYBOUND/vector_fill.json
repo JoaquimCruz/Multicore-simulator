@@ -1,0 +1,14 @@
+{
+  "metadata": { "task_id": "mem_fill", "description": "Escrita sequencial em memoria" },
+  "data": { "base_addr": [0,0,0,0,0,0,0,0,0,0], "val": 55 },
+  "program": [
+    { "instruction": "lw", "rt": "$t0", "offset": 0, "base": "val" },
+    { "instruction": "sw", "rt": "$t0", "offset": 0, "base": "base_addr" },
+    { "instruction": "sw", "rt": "$t0", "offset": 4, "base": "base_addr" },
+    { "instruction": "sw", "rt": "$t0", "offset": 8, "base": "base_addr" },
+    { "instruction": "sw", "rt": "$t0", "offset": 12, "base": "base_addr" },
+    { "instruction": "sw", "rt": "$t0", "offset": 16, "base": "base_addr" },
+    { "instruction": "sw", "rt": "$t0", "offset": 20, "base": "base_addr" },
+    { "instruction": "end" }
+  ]
+}

@@ -1,0 +1,99 @@
+=== Resultados de Execução (PID: 2) ===
+Nome: Processo B
+Quantum: 20
+Prioridade: 8
+Ciclos de Pipeline: 13
+Ciclos de Memória: 93
+Cache Hits: 4
+Cache Misses: 16
+--------------------------------
+=== Resultados de Execução (PID: 12) ===
+Nome: Mem Stride
+Quantum: 20
+Prioridade: 2
+Ciclos de Pipeline: 12
+Ciclos de Memória: 184
+Cache Hits: 2
+Cache Misses: 32
+--------------------------------
+=== Resultados de Execução (PID: 7) ===
+Nome: IO Logger
+Quantum: 20
+Prioridade: 5
+Ciclos de Pipeline: 12
+Ciclos de Memória: 69
+Cache Hits: 3
+Cache Misses: 12
+--------------------------------
+=== Resultados de Execução (PID: 3) ===
+Nome: Processo C
+Quantum: 20
+Prioridade: 5
+Ciclos de Pipeline: 13
+Ciclos de Memória: 93
+Cache Hits: 4
+Cache Misses: 16
+--------------------------------
+=== Resultados de Execução (PID: 9) ===
+Nome: IO Burst
+Quantum: 20
+Prioridade: 4
+Ciclos de Pipeline: 11
+Ciclos de Memória: 110
+Cache Hits: 0
+Cache Misses: 20
+--------------------------------
+=== Resultados de Execução (PID: 11) ===
+Nome: Mem Copy
+Quantum: 20
+Prioridade: 3
+Ciclos de Pipeline: 17
+Ciclos de Memória: 164
+Cache Hits: 6
+Cache Misses: 28
+--------------------------------
+=== Resultados de Execução (PID: 10) ===
+Nome: Mem Fill
+Quantum: 20
+Prioridade: 3
+Ciclos de Pipeline: 14
+Ciclos de Memória: 197
+Cache Hits: 2
+Cache Misses: 34
+--------------------------------
+=== Resultados de Execução (PID: 6) ===
+Nome: Processo Misto
+Quantum: 20
+Prioridade: 2
+Ciclos de Pipeline: 18
+Ciclos de Memória: 134
+Cache Hits: 6
+Cache Misses: 23
+--------------------------------
+=== Resultados de Execução (PID: 8) ===
+Nome: IO PingPong
+Quantum: 20
+Prioridade: 6
+Ciclos de Pipeline: 16
+Ciclos de Memória: 113
+Cache Hits: 3
+Cache Misses: 20
+--------------------------------
+=== Resultados de Execução (PID: 5) ===
+Nome: Processo Memoria
+Quantum: 20
+Prioridade: 5
+Ciclos de Pipeline: 8
+Ciclos de Memória: 100
+Cache Hits: 4
+Cache Misses: 16
+--------------------------------
+=== Resultados de Execução (PID: 1) ===
+Nome: Processo A
+Quantum: 20
+Prioridade: 1
+Ciclos de Pipeline: 164
+Ciclos de Memória: 674
+Cache Hits: 128
+Cache Misses: 88
+--------------------------------

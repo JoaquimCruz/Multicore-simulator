@@ -1,0 +1,6 @@
+{   
+    "pid": 7, 
+    "name": "IO Logger", 
+    "priority": 5, 
+    "program_path": "src/tasks/IOBOUND/logger_task.json" 
+}

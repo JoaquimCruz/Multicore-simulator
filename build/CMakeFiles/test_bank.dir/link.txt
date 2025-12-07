@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/test_bank.dir/src/test/test_register_bank.cpp.o CMakeFiles/test_bank.dir/src/cpu/REGISTER_BANK.cpp.o -o test_bank 

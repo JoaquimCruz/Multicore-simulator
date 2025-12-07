@@ -1,9 +1,6 @@
-build/
-output/
 *.o
 *.out
 simulador
 simulador_v2
 .vscode/
-*.dat
-*.log
+

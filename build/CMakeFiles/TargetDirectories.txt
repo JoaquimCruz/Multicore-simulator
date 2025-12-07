@@ -1,0 +1,11 @@
+/home/joaquim/Documents/multicore-simulator/build/CMakeFiles/simulador.dir
+/home/joaquim/Documents/multicore-simulator/build/CMakeFiles/test_hash.dir
+/home/joaquim/Documents/multicore-simulator/build/CMakeFiles/test_bank.dir
+/home/joaquim/Documents/multicore-simulator/build/CMakeFiles/test_ula.dir
+/home/joaquim/Documents/multicore-simulator/build/CMakeFiles/test_metrics.dir
+/home/joaquim/Documents/multicore-simulator/build/CMakeFiles/run.dir
+/home/joaquim/Documents/multicore-simulator/build/CMakeFiles/test-all.dir
+/home/joaquim/Documents/multicore-simulator/build/CMakeFiles/check.dir
+/home/joaquim/Documents/multicore-simulator/build/CMakeFiles/ajuda.dir
+/home/joaquim/Documents/multicore-simulator/build/CMakeFiles/edit_cache.dir
+/home/joaquim/Documents/multicore-simulator/build/CMakeFiles/rebuild_cache.dir

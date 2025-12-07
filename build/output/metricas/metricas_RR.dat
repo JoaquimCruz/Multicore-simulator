@@ -1,0 +1,18 @@
+==== MÉTRICAS DA POLÍTICA RR ====
+
+Tempo total simulação:    175
+Utilização média da CPU:  44.8571%
+Throughput global:        0.0628571
+
+---- Métricas por processo ----
+PID 1 | Wait=10 | Turnaround=175 | CPU=164
+PID 2 | Wait=0 | Turnaround=13 | CPU=13
+PID 3 | Wait=0 | Turnaround=13 | CPU=13
+PID 5 | Wait=0 | Turnaround=24 | CPU=24
+PID 6 | Wait=12 | Turnaround=31 | CPU=18
+PID 7 | Wait=12 | Turnaround=25 | CPU=12
+PID 8 | Wait=23 | Turnaround=40 | CPU=16
+PID 9 | Wait=23 | Turnaround=35 | CPU=11
+PID 10 | Wait=24 | Turnaround=39 | CPU=14
+PID 11 | Wait=30 | Turnaround=48 | CPU=17
+PID 12 | Wait=39 | Turnaround=52 | CPU=12

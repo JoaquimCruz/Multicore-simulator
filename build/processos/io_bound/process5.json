@@ -1,0 +1,6 @@
+{
+  "pid": 5,
+  "name": "Processo Memoria",
+  "priority": 5,
+  "program_path": "../src/tasks/IOBOUND/io_task.json"
+}
